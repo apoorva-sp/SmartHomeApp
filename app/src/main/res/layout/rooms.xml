@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@android:color/white">
+
+    <!-- Back button and header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/backButton"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@android:drawable/ic_media_previous"
+            android:contentDescription="Back"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Back to Dashboard"
+            android:textSize="16sp"
+            android:textColor="#000000"
+            android:paddingStart="8dp" />
+    </LinearLayout>
+
+    <!-- House Details -->
+    <TextView
+        android:id="@+id/houseName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Main House"
+        android:textSize="24sp"
+        android:textColor="#000000"
+        android:paddingTop="16dp"
+        android:paddingBottom="4dp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/houseAddress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="123 Oak Street, Springfield"
+        android:textSize="14sp"
+        android:textColor="#777777" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingTop="8dp"
+        android:paddingBottom="16dp">
+
+        <TextView
+            android:id="@+id/houseType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/black_rounded_bg"
+            android:text="Single Family"
+            android:textColor="#FFFFFF"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/roomCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" 3 rooms"
+            android:textSize="14sp"
+            android:textColor="#000000"
+            android:paddingLeft="8dp" />
+    </LinearLayout>
+
+    <!-- Add Room button -->
+    <Button
+        android:id="@+id/addRoomButton"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:text="+ Add Room"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/black_rounded_button"
+        android:layout_gravity="end"
+        android:paddingHorizontal="16dp"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Rooms list -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/roomsRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:scrollbars="vertical" />
+
+</LinearLayout>
