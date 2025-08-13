@@ -63,8 +63,9 @@ class WifiConnector(
     private fun suggestNetwork() {
         val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
 
-        val networkSSID = "Apoorva5g" // change to your SSID
-        val networkPass = "apoorva2003sp@" // change to your password
+        val networkSSID = "ESP32_Config" // TODO: Change to your SSID
+        val networkPass = "12345678" // TODO: Change to your password
+
 
         tvStatus.text = "Adding Wi-Fi suggestion..."
 
