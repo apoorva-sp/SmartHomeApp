@@ -3,84 +3,108 @@ package com.example.myhome
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.widget.PopupMenu
+import android.view.View
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.GridLayoutManager
-import android.widget.ImageButton
-import android.widget.ProgressBar
-import android.widget.TextView
-import androidx.recyclerview.widget.RecyclerView
 
 class LoginSignup : AppCompatActivity() {
 
-    private lateinit var menuButton: ImageButton
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var propertyAdapter: PropertyAdapter
+    private lateinit var btnSignin: Button
+    private lateinit var edtPhone: EditText
+    private lateinit var edtPassword: EditText
+    private lateinit var edtUsername: EditText
+    private lateinit var tvToggle: TextView
+    private lateinit var tvWelcome: TextView
+    private lateinit var tvInstruction: TextView
+    private lateinit var tvUsernameLabel: TextView
+
+    private var isSignUpMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        val alreadyConnected = prefs.getBoolean("wifi_connected_once", false)
+        val isLoggedIn = prefs.getBoolean("is_logged_in", false)
 
-        if (!alreadyConnected) {
-            // Wi-Fi not connected before → connect first
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
+        if (isLoggedIn) {
+            startActivity(Intent(this, HomePage::class.java))
             finish()
-        } else {
-            // Wi-Fi already connected → show login UI
-            setContentView(R.layout.login_v2)
+            return
         }
-    }
 
-    /** Initialize all UI components **/
-    private fun initViews() {
-        menuButton = findViewById(R.id.menuButton)
-        recyclerView = findViewById(R.id.recyclerViewProperties)
-    }
+        setContentView(R.layout.login_v2)
 
-    /** Handle the 3-dot menu click and sign-out **/
-    private fun setupMenuButton() {
-        menuButton.setOnClickListener {
-            val popup = PopupMenu(this, menuButton)
-            popup.menuInflater.inflate(R.menu.top_menu, popup.menu)
+        // Initialize views
+        edtPhone = findViewById(R.id.etPhone)
+        edtPassword = findViewById(R.id.etPassword)
+        edtUsername = findViewById(R.id.etUsername)
+        btnSignin = findViewById(R.id.btnSignIn)
+        tvToggle = findViewById(R.id.tvSignUp)
+        tvWelcome = findViewById(R.id.tvWelcome)
+        tvInstruction = findViewById(R.id.tvInstruction)
+        tvUsernameLabel = findViewById(R.id.tvUsernameLabel)
 
-            popup.setOnMenuItemClickListener { item ->
-                when (item.itemId) {
-                    R.id.action_signout -> {
-                        Toast.makeText(this, "Signing out...", Toast.LENGTH_SHORT).show()
-                        // TODO: Add your actual sign-out logic here
-                        true
-                    }
-                    else -> false
+        btnSignin.setOnClickListener {
+            val phone = edtPhone.text.toString().trim()
+            val password = edtPassword.text.toString().trim()
+            val username = edtUsername.text.toString().trim()
+
+            if (isSignUpMode) {
+                if (phone.isNotEmpty() && password.isNotEmpty()  && username.isNotEmpty()) {
+                    // Save signup data after api call and validation
+                    prefs.edit()
+                        .putBoolean("is_logged_in", true)
+                        .putString("phone", phone)
+                        .putString("password", password)
+                        .putString("username", username)
+                        .apply()
+                    Toast.makeText(this, "Signing in...", Toast.LENGTH_SHORT).show()
+
+//                    startActivity(Intent(this, MainActivity::class.java))
+//                    finish()
+                }
+            } else {
+                if (phone.isNotEmpty() && password.isNotEmpty()) {
+                    // Save login data
+                    prefs.edit()
+                        .putBoolean("is_logged_in", true)
+                        .putString("phone", phone)
+                        .putString("password", password)
+                        .apply()
+                    Toast.makeText(this, "Loging in...", Toast.LENGTH_SHORT).show()
+
+//                    startActivity(Intent(this, MainActivity::class.java))
+//                    finish()
                 }
             }
-            popup.show()
+        }
+
+        tvToggle.setOnClickListener {
+            toggleLoginSignup()
         }
     }
 
-    /** Setup RecyclerView with 2 columns and sample data **/
-    private fun setupRecyclerView() {
-        recyclerView.layoutManager = GridLayoutManager(this, 1)
-
-        // Temporary: sample data for 5 cards
-        val properties = mutableListOf<Property>()
-        for (i in 1..5) {
-            properties.add(
-                Property(
-                    title = "Home $i",
-                    type = "Villa",
-                    location = "Location $i",
-                    details = "Details about Home $i"
-                )
-            )
+    private fun toggleLoginSignup() {
+        isSignUpMode = !isSignUpMode
+        if (isSignUpMode) {
+            // Show extra fields
+            edtUsername.visibility = View.VISIBLE
+            tvUsernameLabel.visibility = View.VISIBLE
+            tvWelcome.text = "Create Account"
+            tvInstruction.text = "Fill in the details below to sign up"
+            btnSignin.text = "Sign Up"
+            tvToggle.text = "Already have an account? Login"
+        } else {
+            // Hide extra fields
+            edtUsername.visibility = View.GONE
+            tvUsernameLabel.visibility = View.GONE
+            tvWelcome.text = "Welcome Back"
+            tvInstruction.text = "Enter your phone number and password to sign in"
+            btnSignin.text = "Login"
+            tvToggle.text = "Don't have an account? Sign up"
         }
-
-
-        propertyAdapter = PropertyAdapter(properties)
-        recyclerView.adapter = propertyAdapter
     }
-
 }

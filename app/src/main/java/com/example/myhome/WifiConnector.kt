@@ -63,8 +63,8 @@ class WifiConnector(
     private fun suggestNetwork() {
         val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
 
-        val networkSSID = "ESP32_Config" // TODO: Change to your SSID
-        val networkPass = "12345678" // TODO: Change to your password
+        val networkSSID = "Apoorva5g" // TODO: Change to your SSID
+        val networkPass = "apoorva2003sp@" // TODO: Change to your password
 
 
         tvStatus.text = "Adding Wi-Fi suggestion..."
@@ -93,7 +93,7 @@ class WifiConnector(
 
                 if (capabilities != null && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
                     val gatewayIp = getGatewayIpAddress()
-                    markWifiSetupDone()
+                    markWifiSetupDone()///////////////////to be removed at the end
                     progressBar.visibility = View.GONE
                     context.unregisterReceiver(this)
 
