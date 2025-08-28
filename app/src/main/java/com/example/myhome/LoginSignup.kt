@@ -2,17 +2,21 @@ package com.example.myhome
 
 import android.content.Context
 import android.content.Intent
+import android.net.wifi.WifiManager.WifiLock
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.Volley
+import org.json.JSONObject
+import android.util.Log
 
 class LoginSignup : AppCompatActivity() {
 
-    private lateinit var btnSignin: Button
+    private lateinit var btnAction: Button
     private lateinit var edtPhone: EditText
     private lateinit var edtPassword: EditText
     private lateinit var edtUsername: EditText
@@ -20,17 +24,26 @@ class LoginSignup : AppCompatActivity() {
     private lateinit var tvWelcome: TextView
     private lateinit var tvInstruction: TextView
     private lateinit var tvUsernameLabel: TextView
-
+    private lateinit var requestQueue: com.android.volley.RequestQueue
+    private var url = ""
     private var isSignUpMode = false
+    private lateinit var prefs: android.content.SharedPreferences // ⭐ cache prefs
+    private val TAG = "LoginSignup"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        val isLoggedIn = prefs.getBoolean("is_logged_in", false)
+        prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putBoolean("is_esp32_setup_done",false)
 
-        if (isLoggedIn) {
-            startActivity(Intent(this, HomePage::class.java))
+        // If already logged in → go straight to Home
+        if (prefs.getBoolean("is_logged_in", false) && prefs.getBoolean("is_esp32_setup_done",false)) {
+            startActivity(Intent(this, Appliances::class.java))
+            finish()
+            return
+        }
+        else if(prefs.getBoolean("is_logged_in", false) && !prefs.getBoolean("is_esp32_setup_done",false)){
+            startActivity(Intent(this, Appliances::class.java))
             finish()
             return
         }
@@ -41,70 +54,154 @@ class LoginSignup : AppCompatActivity() {
         edtPhone = findViewById(R.id.etPhone)
         edtPassword = findViewById(R.id.etPassword)
         edtUsername = findViewById(R.id.etUsername)
-        btnSignin = findViewById(R.id.btnSignIn)
+        btnAction = findViewById(R.id.btnSignIn)
         tvToggle = findViewById(R.id.tvSignUp)
         tvWelcome = findViewById(R.id.tvWelcome)
         tvInstruction = findViewById(R.id.tvInstruction)
         tvUsernameLabel = findViewById(R.id.tvUsernameLabel)
 
-        btnSignin.setOnClickListener {
+        requestQueue = Volley.newRequestQueue(this)
+        url = "https://capstone.pivotpt.in/userAPI.php"
+
+        btnAction.setOnClickListener {
             val phone = edtPhone.text.toString().trim()
             val password = edtPassword.text.toString().trim()
             val username = edtUsername.text.toString().trim()
 
             if (isSignUpMode) {
-                if (phone.isNotEmpty() && password.isNotEmpty()  && username.isNotEmpty()) {
-                    // Save signup data after api call and validation
-                    prefs.edit()
-                        .putBoolean("is_logged_in", true)
-                        .putString("phone", phone)
-                        .putString("password", password)
-                        .putString("username", username)
-                        .apply()
-                    Toast.makeText(this, "Signing in...", Toast.LENGTH_SHORT).show()
-
-//                    startActivity(Intent(this, MainActivity::class.java))
-//                    finish()
+                if (phone.isNotEmpty() && password.isNotEmpty() && username.isNotEmpty()) {
+                    signUp(username, password, phone)
+                } else {
+                    Toast.makeText(this, "All fields are required", Toast.LENGTH_SHORT).show()
                 }
             } else {
                 if (phone.isNotEmpty() && password.isNotEmpty()) {
-                    // Save login data
-                    prefs.edit()
-                        .putBoolean("is_logged_in", true)
-                        .putString("phone", phone)
-                        .putString("password", password)
-                        .apply()
-                    Toast.makeText(this, "Loging in...", Toast.LENGTH_SHORT).show()
+                    // ⭐ Check SharedPreferences first
+                    val savedPhone = prefs.getString("phone", null)
+                    val savedPassword = prefs.getString("password", null)
 
-//                    startActivity(Intent(this, MainActivity::class.java))
-//                    finish()
+                    if (savedPhone == phone && savedPassword == password) {
+                        Toast.makeText(this, "Login successful (local)!", Toast.LENGTH_SHORT).show()
+                        startActivity(Intent(this, Appliances::class.java))
+                        finish()
+                    } else {
+                        login(phone, password) // fallback → call API
+                    }
+                } else {
+                    Toast.makeText(this, "Phone and password required", Toast.LENGTH_SHORT).show()
                 }
             }
         }
 
-        tvToggle.setOnClickListener {
-            toggleLoginSignup()
-        }
+        tvToggle.setOnClickListener { toggleLoginSignup() }
     }
 
     private fun toggleLoginSignup() {
         isSignUpMode = !isSignUpMode
         if (isSignUpMode) {
-            // Show extra fields
             edtUsername.visibility = View.VISIBLE
             tvUsernameLabel.visibility = View.VISIBLE
             tvWelcome.text = "Create Account"
             tvInstruction.text = "Fill in the details below to sign up"
-            btnSignin.text = "Sign Up"
+            btnAction.text = "Sign Up"
             tvToggle.text = "Already have an account? Login"
         } else {
-            // Hide extra fields
             edtUsername.visibility = View.GONE
             tvUsernameLabel.visibility = View.GONE
             tvWelcome.text = "Welcome Back"
             tvInstruction.text = "Enter your phone number and password to sign in"
-            btnSignin.text = "Login"
+            btnAction.text = "Login"
             tvToggle.text = "Don't have an account? Sign up"
         }
+    }
+
+    private fun login(phone: String, password: String) {
+        val jsonBody = JSONObject().apply {
+            put("serviceID", 2)
+            put("phonenumber", phone)
+            put("password", password)
+        }
+
+        val request = JsonObjectRequest(
+            Request.Method.POST,
+            url,
+            jsonBody,
+            Response.Listener { response ->
+                val code = response.optInt("code", -1)
+                val message = response.optString("message", "Unknown error")
+                val userId = response.optInt("userId", -1)
+                val username = response.optString("username", "")
+
+                if (code == 0) {
+                    // ⭐ Save credentials for future offline login
+                    prefs.edit()
+                        .putBoolean("is_logged_in", true)
+                        .putString("phone", phone)
+                        .putString("username", username)
+                        .putString("password", password)
+                        .putInt("userId", userId)
+                        .apply()
+                    Log.d(TAG, "Login response: code=$code, message=$message, userId=$userId, username=$username") // ⭐ log success
+
+                    Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show()
+                    startActivity(Intent(this, Appliances::class.java))
+                    finish()
+                } else {
+                    Toast.makeText(this, "Login failed: $message", Toast.LENGTH_LONG).show()
+                }
+            },
+            Response.ErrorListener { error ->
+                Log.e(TAG, "Login API error: ${error.message}", error) // ⭐ log errors with stacktrace
+
+                Toast.makeText(this, "Error: ${error.message}", Toast.LENGTH_LONG).show()
+            }
+        )
+
+        requestQueue.add(request)
+    }
+
+    private fun signUp(username: String, password: String, phone: String) {
+        val jsonBody = JSONObject().apply {
+            put("serviceID", 1)
+            put("username", username)
+            put("password", password)
+            put("phonenumber", phone)
+        }
+
+        val request = JsonObjectRequest(
+            Request.Method.POST,
+            url,
+            jsonBody,
+            Response.Listener { response ->
+                val code = response.optInt("code", -1)
+                val message = response.optString("message", "Unknown error")
+                val userId = response.optInt("userId", -1)
+
+                if (code == 0) {
+                    // ⭐ Save credentials locally
+                    prefs.edit()
+                        .putBoolean("is_logged_in", true)
+                        .putString("phone", phone)
+                        .putString("username", username)
+                        .putString("password", password)
+                        .putInt("userId", userId)
+                        .apply()
+                    Log.d(TAG, "Signup response: code=$code, message=$message, userId=$userId") // ⭐ log success
+
+                    Toast.makeText(this, "Signup successful!", Toast.LENGTH_SHORT).show()
+                    startActivity(Intent(this, MainActivity::class.java))
+                    finish()
+                } else {
+                    Toast.makeText(this, "Signup failed: $message", Toast.LENGTH_LONG).show()
+                }
+            },
+            Response.ErrorListener { error ->
+                Log.e(TAG, "Signup API error: ${error.message}", error) // ⭐ log errors with stacktrace
+
+                Toast.makeText(this, "Error: ${error.message}", Toast.LENGTH_LONG).show()
+            }
+        )
+
+        requestQueue.add(request)
     }
 }

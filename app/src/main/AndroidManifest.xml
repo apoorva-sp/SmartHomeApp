@@ -24,6 +24,8 @@
         <activity android:name=".MainActivity" />
         <activity android:name=".HomePage" />
         <activity android:name=".Appliances" />
+        <activity android:name=".WifiLogin" />
+
 
         <activity
             android:name=".LoginSignup"

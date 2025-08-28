@@ -1,8 +1,9 @@
 package com.example.myhome
 
 data class Device(
-    val name: String,
-    val type: String,
-    val icon: String,
-    var isOn: Boolean
+    val device_id: String,
+    val device_name: String,
+    val switch_board_id: String,
+    val status: String,
+    val device_type:String
 )
