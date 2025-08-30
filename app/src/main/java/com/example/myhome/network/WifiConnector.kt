@@ -1,4 +1,4 @@
-package com.example.myhome
+package com.example.myhome.network
 
 import android.Manifest
 import android.content.*

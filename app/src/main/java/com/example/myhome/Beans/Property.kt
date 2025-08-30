@@ -1,4 +1,4 @@
-package com.example.myhome
+package com.example.myhome.Beans
 
 data class Property(
     val title: String,

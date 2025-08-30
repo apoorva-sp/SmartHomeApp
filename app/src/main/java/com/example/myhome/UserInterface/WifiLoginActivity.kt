@@ -1,5 +1,6 @@
-package com.example.myhome
+package com.example.myhome.UserInterface
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.*
@@ -9,9 +10,10 @@ import com.android.volley.RequestQueue
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
+import com.example.myhome.R
 import org.json.JSONObject
 
-class WifiLogin : AppCompatActivity() {
+class WifiLoginActivity : AppCompatActivity() {
 
     private lateinit var etUsername: EditText
     private lateinit var etPassword: EditText
@@ -21,6 +23,8 @@ class WifiLogin : AppCompatActivity() {
     private lateinit var requestQueue: RequestQueue
 
     private var gatewayIp: String? = null
+    private lateinit var prefs: android.content.SharedPreferences // ⭐ cache prefs
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,6 +76,11 @@ class WifiLogin : AppCompatActivity() {
             Response.Listener { response ->
                 progressBar.visibility = ProgressBar.GONE
                 tvStatus.text = "Login successful!"
+                prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+                prefs.edit()
+                    .putBoolean("is_esp32_setup_done", true)
+                    .apply()
+
 
                 // If ESP32 returns token or status, handle it here
                 // Example: response.getString("token")
@@ -88,7 +97,7 @@ class WifiLogin : AppCompatActivity() {
     }
 
     private fun goToHomeScreen() {
-        val intent = Intent(this, Appliances::class.java)
+        val intent = Intent(this, AppliancesActivity::class.java)
         startActivity(intent)
         finish()
     }

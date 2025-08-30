@@ -7,6 +7,8 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.myhome.Beans.Property
+import com.example.myhome.UserInterface.AppliancesActivity
 
 class PropertyAdapter(private val propertyList: List<Property>) :
     RecyclerView.Adapter<PropertyAdapter.PropertyViewHolder>() {
@@ -35,7 +37,7 @@ class PropertyAdapter(private val propertyList: List<Property>) :
         // Handle card clicks here
         holder.housecard.setOnClickListener {
             val context = holder.itemView.context
-            val intent = Intent(context, Appliances::class.java)
+            val intent = Intent(context, AppliancesActivity::class.java)
             intent.putExtra("housename",holder.tvTitle.text)
             intent.putExtra("location",holder.tvLocation.text)
             context.startActivity(intent)

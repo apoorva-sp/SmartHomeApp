@@ -1,16 +1,17 @@
-package com.example.myhome
+package com.example.myhome.UserInterface
 
-import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageButton
-import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.myhome.Beans.Property
+import com.example.myhome.PropertyAdapter
+import com.example.myhome.R
 
-class HomePage : AppCompatActivity() {
+class HomePageActivity : AppCompatActivity() {
     private lateinit var menuButton: ImageButton
     private lateinit var recyclerView: RecyclerView
     private lateinit var propertyAdapter: PropertyAdapter

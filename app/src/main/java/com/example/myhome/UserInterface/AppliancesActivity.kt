@@ -1,8 +1,9 @@
-package com.example.myhome
+package com.example.myhome.UserInterface
 
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.GridLayout
@@ -16,9 +17,12 @@ import androidx.appcompat.app.AppCompatActivity
 import com.android.volley.Request
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
+import com.example.myhome.Beans.Device
+import com.example.myhome.R
+import com.example.myhome.network.UdpPortManager
 import org.json.JSONObject
 
-class Appliances : AppCompatActivity() {
+class AppliancesActivity : AppCompatActivity() {
 
     private lateinit var gridLayout: GridLayout
     private lateinit var backtohome: TextView
@@ -33,7 +37,16 @@ class Appliances : AppCompatActivity() {
         backtohome = findViewById(R.id.backtohome)
         menuButton = findViewById(R.id.menuButton)
 
-        fetchDevices()//API call and display devices
+        UdpPortManager.messages.observe(this) { (msg, sender) ->
+            // Here you get each incoming UDP message
+
+            fetchDevices()//API call and display devices
+
+            Log.d("LoginSignupActivity", "Message: $msg from $sender")
+
+        }
+
+
 
         setupMenuButton()
 
@@ -132,7 +145,7 @@ class Appliances : AppCompatActivity() {
                             .apply() // ✅ don't forget apply()
 
                         // Go to login page
-                        val intent = Intent(this, LoginSignup::class.java)
+                        val intent = Intent(this, LoginSignupActivity::class.java)
                         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                         startActivity(intent)
 

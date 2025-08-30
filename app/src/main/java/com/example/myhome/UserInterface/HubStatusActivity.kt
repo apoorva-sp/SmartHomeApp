@@ -1,8 +1,7 @@
-package com.example.myhome
+package com.example.myhome.UserInterface
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -15,8 +14,10 @@ import com.android.volley.RequestQueue
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import androidx.appcompat.app.AppCompatActivity
+import com.example.myhome.R
+import com.example.myhome.network.WifiConnector
 
-class MainActivity : AppCompatActivity() {
+class HubStatusActivity : AppCompatActivity() {
 
     private lateinit var tvStatus: TextView
     private lateinit var progressBar: ProgressBar
@@ -124,7 +125,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun goToWifiLoginPage() {
-        val intent = Intent(this, WifiLogin::class.java)
+        val intent = Intent(this, WifiLoginActivity::class.java)
         savedIp?.let { intent.putExtra("gatewayIp", it) } // ✅ only if not null
         startActivity(intent)
         finish()

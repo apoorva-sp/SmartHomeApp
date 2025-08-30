@@ -1,8 +1,7 @@
-package com.example.myhome
+package com.example.myhome.UserInterface
 
 import android.content.Context
 import android.content.Intent
-import android.net.wifi.WifiManager.WifiLock
 import android.os.Bundle
 import android.view.View
 import android.widget.*
@@ -13,8 +12,10 @@ import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import org.json.JSONObject
 import android.util.Log
+import com.example.myhome.R
+import com.example.myhome.network.UdpPortManager
 
-class LoginSignup : AppCompatActivity() {
+class LoginSignupActivity : AppCompatActivity() {
 
     private lateinit var btnAction: Button
     private lateinit var edtPhone: EditText
@@ -36,19 +37,28 @@ class LoginSignup : AppCompatActivity() {
         prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         prefs.edit().putBoolean("is_esp32_setup_done",false)
 
-        // If already logged in → go straight to Home
+        // If already logged in and esp32 setup also done  → go straight to Home
         if (prefs.getBoolean("is_logged_in", false) && prefs.getBoolean("is_esp32_setup_done",false)) {
-            startActivity(Intent(this, Appliances::class.java))
+            startActivity(Intent(this, AppliancesActivity::class.java))
             finish()
             return
         }
+        // if logged in but could not complete the esp32 setup
         else if(prefs.getBoolean("is_logged_in", false) && !prefs.getBoolean("is_esp32_setup_done",false)){
-            startActivity(Intent(this, Appliances::class.java))
+            //open the esp32polling connection intent ie; hubstatusActivity
+            startActivity(Intent(this, AppliancesActivity::class.java))
             finish()
             return
         }
 
         setContentView(R.layout.login_v2)
+
+        UdpPortManager.messages.observe(this) { (msg, sender) ->
+            // Here you get each incoming UDP message
+            Log.d("LoginSignupActivity", "Message: $msg from $sender")
+
+        }
+
 
         // Initialize views
         edtPhone = findViewById(R.id.etPhone)
@@ -82,7 +92,7 @@ class LoginSignup : AppCompatActivity() {
 
                     if (savedPhone == phone && savedPassword == password) {
                         Toast.makeText(this, "Login successful (local)!", Toast.LENGTH_SHORT).show()
-                        startActivity(Intent(this, Appliances::class.java))
+                        startActivity(Intent(this, AppliancesActivity::class.java))
                         finish()
                     } else {
                         login(phone, password) // fallback → call API
@@ -144,7 +154,7 @@ class LoginSignup : AppCompatActivity() {
                     Log.d(TAG, "Login response: code=$code, message=$message, userId=$userId, username=$username") // ⭐ log success
 
                     Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this, Appliances::class.java))
+                    startActivity(Intent(this, AppliancesActivity::class.java))
                     finish()
                 } else {
                     Toast.makeText(this, "Login failed: $message", Toast.LENGTH_LONG).show()
@@ -189,7 +199,7 @@ class LoginSignup : AppCompatActivity() {
                     Log.d(TAG, "Signup response: code=$code, message=$message, userId=$userId") // ⭐ log success
 
                     Toast.makeText(this, "Signup successful!", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this, MainActivity::class.java))
+                    startActivity(Intent(this, HubStatusActivity::class.java))
                     finish()
                 } else {
                     Toast.makeText(this, "Signup failed: $message", Toast.LENGTH_LONG).show()
@@ -204,4 +214,7 @@ class LoginSignup : AppCompatActivity() {
 
         requestQueue.add(request)
     }
+
+
+
 }

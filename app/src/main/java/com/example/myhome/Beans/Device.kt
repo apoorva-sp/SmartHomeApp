@@ -1,4 +1,4 @@
-package com.example.myhome
+package com.example.myhome.Beans
 
 data class Device(
     val device_id: String,
