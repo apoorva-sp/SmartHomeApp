@@ -46,18 +46,18 @@ class LoginSignupActivity : AppCompatActivity() {
         // if logged in but could not complete the esp32 setup
         else if(prefs.getBoolean("is_logged_in", false) && !prefs.getBoolean("is_esp32_setup_done",false)){
             //open the esp32polling connection intent ie; hubstatusActivity
-            startActivity(Intent(this, AppliancesActivity::class.java))
+            startActivity(Intent(this, WifiLoginActivity::class.java))
             finish()
             return
         }
 
         setContentView(R.layout.login_v2)
 
-        UdpPortManager.messages.observe(this) { (msg, sender) ->
-            // Here you get each incoming UDP message
-            Log.d("LoginSignupActivity", "Message: $msg from $sender")
-
-        }
+//        UdpPortManager.messages.observe(this) { (msg, sender) ->
+//            // Here you get each incoming UDP message
+//            Log.d("LoginSignupActivity", "Message: $msg from $sender")
+//
+//        }
 
 
         // Initialize views
@@ -199,7 +199,7 @@ class LoginSignupActivity : AppCompatActivity() {
                     Log.d(TAG, "Signup response: code=$code, message=$message, userId=$userId") // ⭐ log success
 
                     Toast.makeText(this, "Signup successful!", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this, HubStatusActivity::class.java))
+                    startActivity(Intent(this, WifiLoginActivity::class.java))
                     finish()
                 } else {
                     Toast.makeText(this, "Signup failed: $message", Toast.LENGTH_LONG).show()
@@ -214,7 +214,4 @@ class LoginSignupActivity : AppCompatActivity() {
 
         requestQueue.add(request)
     }
-
-
-
 }

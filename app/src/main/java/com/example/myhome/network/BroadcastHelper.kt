@@ -5,34 +5,36 @@ import kotlinx.coroutines.withContext
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
+import java.net.SocketTimeoutException
+
 
 object BroadcastHelper {
 
     private const val PORT = 5000
-    private const val TIMEOUT_DISCOVERY = 5000
-    private const val TIMEOUT_VERIFY = 2000
-    private const val BROADCAST_IP = "192.168.29.255" // ⚠️ make configurable if needed
+    private const val BROADCAST_IP = "192.168.1.255" // ⚠️ make configurable if needed
+    private const val TIMEOUT = 5000 // ms
 
-    /**
-     * Send DISCOVER_HUB broadcast and wait for a reply.
-     */
-    suspend fun discoverEsp32Hub(): String? = withContext(Dispatchers.IO) {
+    suspend fun discoverDevice(message: String = "DISCOVER_HUB"): String? = withContext(Dispatchers.IO) {
         var socket: DatagramSocket? = null
-        try {
+        return@withContext try {
             socket = DatagramSocket().apply {
                 broadcast = true
-                soTimeout = TIMEOUT_DISCOVERY
+                soTimeout = TIMEOUT
             }
 
-            val message = "DISCOVER_HUB".toByteArray()
-            val sendPacket = DatagramPacket(message, message.size, InetAddress.getByName(BROADCAST_IP), PORT)
+            // Send broadcast
+            val data = message.toByteArray()
+            val sendPacket = DatagramPacket(data, data.size, InetAddress.getByName(BROADCAST_IP), PORT)
             socket.send(sendPacket)
 
+            // Receive reply
             val buffer = ByteArray(1024)
             val receivePacket = DatagramPacket(buffer, buffer.size)
             socket.receive(receivePacket)
 
-            receivePacket.address.hostAddress
+            val reply = String(receivePacket.data, 0, receivePacket.length).trim()
+            reply
+
         } catch (e: Exception) {
             e.printStackTrace()
             null
@@ -46,7 +48,7 @@ object BroadcastHelper {
      */
     suspend fun verifyHubIp(savedIp: String): Boolean = withContext(Dispatchers.IO) {
         DatagramSocket().use { socket ->
-            socket.soTimeout = TIMEOUT_VERIFY
+            socket.soTimeout = TIMEOUT
 
             return@withContext try {
                 val hubAddr = InetAddress.getByName(savedIp)

@@ -15,65 +15,70 @@ import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import androidx.appcompat.app.AppCompatActivity
 import com.example.myhome.R
-import com.example.myhome.network.WifiConnector
 
-class HubStatusActivity : AppCompatActivity() {
+class HubPollingActivity : AppCompatActivity() {
 
     private lateinit var tvStatus: TextView
     private lateinit var progressBar: ProgressBar
-    private lateinit var wifiConnector: WifiConnector
     private lateinit var btnRetry: Button
     private lateinit var btnLogin: Button
-    private var browserOpened = false
 
     private lateinit var requestQueue: RequestQueue
     private val handler = Handler(Looper.getMainLooper())
     private var pollingRunnable: Runnable? = null
     private var attempt = 0
-    private var savedIp: String? = ""
+    private lateinit var prefs: android.content.SharedPreferences // ⭐ cache prefs
+
+
+    private var gatewayIp: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.hub_polling)
 
-        tvStatus = findViewById(R.id.textViewStatus)
         progressBar = findViewById(R.id.progressBar)
-        btnRetry = findViewById(R.id.btnRetry)
+        tvStatus = findViewById(R.id.textViewStatus)
         btnLogin = findViewById(R.id.btnLogin)
+        btnRetry = findViewById(R.id.btnRetry)
 
         requestQueue = Volley.newRequestQueue(this)
-        val prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
 
-        wifiConnector = WifiConnector(
-            context = this,
-            tvStatus = tvStatus,
-            progressBar = progressBar
-        ) { gatewayIp ->
-            // Save IP for later
-            prefs.edit().putString("gateway_ip", gatewayIp).apply()
-            savedIp = gatewayIp
-            startPolling(gatewayIp)
-        }
-        //call the function to connect to esp32 hub
-        wifiConnector.checkPermissionsAndConnect()
+        prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        gatewayIp = prefs.getString("gateway_ip", null)
 
         btnRetry.setOnClickListener {
             tvStatus.text = "Retrying polling..."
-            val ip = prefs.getString("gateway_ip", null)  // local immutable val
-            savedIp = ip
-            if (ip != null) {
-                startPolling(ip)
-            } else {
-                tvStatus.text = "No saved IP, reconnecting..."
-                wifiConnector.checkPermissionsAndConnect()
-            }
+            gatewayIp?.let { ip -> startPolling(ip) }
+                ?: run { tvStatus.text = "❌ No saved hub IP found" }
         }
-
 
         btnLogin.setOnClickListener {
-
-            goToWifiLoginPage()
+            showNodeConfirmationDialog()
         }
+
+        // Optionally: auto-start polling when activity loads
+        gatewayIp?.let { startPolling(it) }
+    }
+
+    private fun showNodeConfirmationDialog() {
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+        builder.setTitle("Confirm")
+        builder.setMessage("Are all nodes connected?")
+
+        builder.setPositiveButton("Yes") { dialog, _ ->
+            dialog.dismiss()
+            prefs.edit()
+                .putBoolean("is_esp32_setup_done", true)
+                .apply()
+            OpenIpdiscoveryPage()  // ✅ go to next intent
+        }
+
+        builder.setNegativeButton("No") { dialog, _ ->
+            dialog.dismiss()
+            // ✅ do nothing, stay on the same page
+        }
+
+        builder.create().show()
     }
 
     private fun startPolling(ip: String) {
@@ -95,6 +100,12 @@ class HubStatusActivity : AppCompatActivity() {
                     Request.Method.GET, url,
                     { response ->
                         tvStatus.text = "Attempt ${attempt + 1}: $response"
+
+                        // ✅ Example: stop polling early if response looks good
+                        if (response.contains("ready", ignoreCase = true)) {
+                            stopPolling()
+                            tvStatus.text = "✅ Hub is ready"
+                        }
                     },
                     { error ->
                         tvStatus.text = "Error: ${error.message}"
@@ -116,17 +127,8 @@ class HubStatusActivity : AppCompatActivity() {
         progressBar.visibility = View.GONE
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        wifiConnector.handlePermissionsResult(requestCode, grantResults)
-    }
-
-    private fun goToWifiLoginPage() {
-        val intent = Intent(this, WifiLoginActivity::class.java)
-        savedIp?.let { intent.putExtra("gatewayIp", it) } // ✅ only if not null
+    private fun OpenIpdiscoveryPage() {
+        val intent = Intent(this, IpDiscoveryActivity::class.java)
         startActivity(intent)
         finish()
     }
@@ -136,5 +138,4 @@ class HubStatusActivity : AppCompatActivity() {
         stopPolling()
         requestQueue.cancelAll { true }
     }
-
 }

@@ -46,8 +46,6 @@ class AppliancesActivity : AppCompatActivity() {
 
         }
 
-
-
         setupMenuButton()
 
         backtohome.setOnClickListener {

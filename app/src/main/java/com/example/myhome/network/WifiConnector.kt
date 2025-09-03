@@ -12,6 +12,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.myhome.Keys
 
 class WifiConnector(
     private val context: Context,
@@ -63,8 +64,8 @@ class WifiConnector(
     private fun suggestNetwork() {
         val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
 
-        val networkSSID = "Apoorva5g" // TODO: Change to your SSID
-        val networkPass = "apoorva2003sp@" // TODO: Change to your password
+        val networkSSID = Keys.SSID
+        val networkPass = Keys.Password // TODO: Change to your password
 
 
         tvStatus.text = "Adding Wi-Fi suggestion..."
