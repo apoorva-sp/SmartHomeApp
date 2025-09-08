@@ -55,6 +55,7 @@ class WifiLoginActivity : AppCompatActivity() {
             // Save IP for later
             prefs.edit().putString("gateway_ip", gatewayIp).apply()
             savedIp = gatewayIp
+            tvStatus.text = "mobile connected to hub"
 
         }
         //call the function to connect to esp32 hub
@@ -86,10 +87,10 @@ class WifiLoginActivity : AppCompatActivity() {
         progressBar.visibility = ProgressBar.VISIBLE
         tvStatus.text = "Logging in..."
 
-        val url = "http://$ip/login"
+        val url = "http://192.168.29.214/login"
 
         val jsonBody = JSONObject().apply {
-            put("SSID", username)
+            put("ssid", username)
             put("password", password)
         }
 
@@ -99,13 +100,24 @@ class WifiLoginActivity : AppCompatActivity() {
             jsonBody,
             Response.Listener { response ->
                 progressBar.visibility = ProgressBar.GONE
-                tvStatus.text = "Login successful!"
 
+                try {
+                    val status = response.optString("status")
+                    val message = response.optString("message")
+                    val token = response.optString("token") // optional
 
-                // If ESP32 returns token or status, handle it here
-                // Example: response.getString("token")
-
-                goToHubStatusScreen()
+                    if (status == "ok") {
+                        tvStatus.text = "Login successful!"
+                        // Save token if needed
+                        prefs.edit().putString("hub_token", token).apply()
+                        // Go to next page
+                        goToHubStatusScreen()
+                    } else {
+                        tvStatus.text = "Login failed: $message"
+                    }
+                } catch (e: Exception) {
+                    tvStatus.text = "Invalid response format"
+                }
             },
             Response.ErrorListener { error ->
                 progressBar.visibility = ProgressBar.GONE

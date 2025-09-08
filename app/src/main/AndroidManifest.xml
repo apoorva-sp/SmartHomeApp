@@ -27,15 +27,14 @@
 
         <!-- Activities -->
         <activity android:name=".UserInterface.HubPollingActivity" />
-        <activity android:name=".UserInterface.HomePageActivity" />
         <activity android:name=".UserInterface.AppliancesActivity" />
         <activity android:name=".UserInterface.WifiLoginActivity" />
-        <activity android:name=".UserInterface.LoginSignupActivity" />
+        <activity android:name=".UserInterface.IpDiscoveryActivity" />
 
 
         <!-- Launcher Activity -->
         <activity
-            android:name=".UserInterface.IpDiscoveryActivity"
+            android:name=".UserInterface.LoginSignupActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.MyHome">

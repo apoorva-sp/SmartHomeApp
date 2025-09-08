@@ -39,7 +39,7 @@ class LoginSignupActivity : AppCompatActivity() {
 
         // If already logged in and esp32 setup also done  → go straight to Home
         if (prefs.getBoolean("is_logged_in", false) && prefs.getBoolean("is_esp32_setup_done",false)) {
-            startActivity(Intent(this, AppliancesActivity::class.java))
+            startActivity(Intent(this, IpDiscoveryActivity::class.java))
             finish()
             return
         }
