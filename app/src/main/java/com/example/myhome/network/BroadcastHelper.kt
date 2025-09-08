@@ -11,7 +11,7 @@ import java.net.SocketTimeoutException
 object BroadcastHelper {
 
     private const val PORT = 5000
-    private const val BROADCAST_IP = "192.168.1.255" // ⚠️ make configurable if needed
+    private const val BROADCAST_IP = "255.255.255.255" // ⚠️ make configurable if needed
     private const val TIMEOUT = 5000 // ms
 
     suspend fun discoverDevice(message: String = "DISCOVER_HUB"): String? = withContext(Dispatchers.IO) {
