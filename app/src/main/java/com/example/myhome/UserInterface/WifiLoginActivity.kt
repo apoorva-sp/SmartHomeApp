@@ -5,13 +5,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import com.android.volley.Request
 import com.android.volley.RequestQueue
-import com.android.volley.Response
-import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.example.myhome.R
@@ -94,37 +90,35 @@ class WifiLoginActivity : AppCompatActivity() {
             put("password", password)
         }
 
-        val request = JsonObjectRequest(
-            Request.Method.POST,
+        val request = object : StringRequest(
+            Method.POST,
             url,
-            jsonBody,
-            Response.Listener { response ->
+            { response ->
                 progressBar.visibility = ProgressBar.GONE
-
-                try {
-                    val status = response.optString("status")
-                    val message = response.optString("message")
-                    val token = response.optString("token") // optional
-
-                    if (status == "ok") {
-                        tvStatus.text = "Login successful!"
-                        // Save token if needed
-                        prefs.edit().putString("hub_token", token).apply()
-                        // Go to next page
-                        goToHubStatusScreen()
-                    } else {
-                        tvStatus.text = "Login failed: $message"
-                    }
-                } catch (e: Exception) {
-                    tvStatus.text = "Invalid response format"
+                val json = JSONObject(response)
+                val status = json.optInt("code")
+                val message = json.optString("message")
+                if (status == 0) {
+                    tvStatus.text = "Login successful!"
+                    goToHubStatusScreen()
+                } else {
+                    tvStatus.text = "Login failed: $message"
                 }
             },
-            Response.ErrorListener { error ->
+            { error ->
                 progressBar.visibility = ProgressBar.GONE
-                tvStatus.text = "Login failed: ${error.message}"
+                val body = error.networkResponse?.data?.toString(Charsets.UTF_8)
+                tvStatus.text = "Login failed HTTP ERROR: $body"
             }
-        )
-
+        ) {
+            override fun getParams(): MutableMap<String, String> {
+                val params = HashMap<String, String>()
+                params["ssid"] = username
+                params["password"] = password
+                params["user_id"] = "-1"  // if needed
+                return params
+            }
+        }
         requestQueue.add(request)
     }
 
@@ -139,6 +133,7 @@ class WifiLoginActivity : AppCompatActivity() {
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         wifiConnector.handlePermissionsResult(requestCode, grantResults)
     }
 
