@@ -87,7 +87,7 @@ class WifiLoginActivity : AppCompatActivity() {
         progressBar.visibility = ProgressBar.VISIBLE
         tvStatus.text = "Logging in..."
 
-        val url = "http://192.168.29.214/login"
+        val url = "http://$ip/login"
 
         val jsonBody = JSONObject().apply {
             put("ssid", username)
