@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.myhome.R
 import com.example.myhome.network.BroadcastHelper
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
@@ -32,10 +33,24 @@ class IpDiscoveryActivity : AppCompatActivity() {
         progressBar.visibility = View.VISIBLE
         resultText.text = "🔍 Searching for hub..."
 
-        val hub_ip = prefs.getString("hub_ip",null)
-        if(hub_ip==null){
+        val hub_ip = prefs.getString("hub_ip", null)
+
+        if (hub_ip == null) {
             lifecycleScope.launch {
-                val reply = BroadcastHelper.discoverDevice()
+                var reply: String? = null
+
+                // Try discovery 3 times
+                repeat(3) { attempt ->
+                    reply = BroadcastHelper.discoverDevice()
+                    if (reply != null) {
+                        Log.d("IpDiscoveryActivity", "Got reply on attempt ${attempt + 1}")
+                        return@repeat
+                    } else {
+                        Log.w("IpDiscoveryActivity", "No reply, attempt ${attempt + 1}")
+                        delay(1000) // wait 1s before retry
+                    }
+                }
+
                 if (reply != null) {
                     try {
                         val json = JSONObject(reply)
@@ -48,21 +63,18 @@ class IpDiscoveryActivity : AppCompatActivity() {
 
                         resultText.text = "✅ Hub found at: $ip"
                         Log.d("broadcasthub", "Response: '$ip'")
-
                         OpenAppliancePage()
                     } catch (e: Exception) {
                         Log.e("IpDiscoveryActivity", "JSON parse error: ${e.message}\nReply: $reply")
                         resultText.text = "⚠️ Invalid response"
                     }
                 } else {
-                    resultText.text = "❌ No reply"
+                    resultText.text = "❌ No reply after 3 attempts"
                 }
+
                 progressBar.visibility = View.GONE
             }
-
-
-
-        }else {
+        } else {
             lifecycleScope.launch {
                 var success = false
                 for (attempt in 1..3) {
@@ -89,6 +101,7 @@ class IpDiscoveryActivity : AppCompatActivity() {
             }
         }
     }
+
     private fun OpenAppliancePage() {
         val intent = Intent(this, AppliancesActivity::class.java)
         startActivity(intent)
