@@ -72,7 +72,8 @@ class WifiLoginActivity : AppCompatActivity() {
 
             val ip = prefs.getString("gateway_ip", null)
             if (ip != null) {
-                showDeviceCountDialog(ip, username, password) // 👈 Show dialog first
+//                showDeviceCountDialog(ip, username, password) // 👈 Show dialog first
+                    loginToDevice(ip,username,password);
             } else {
                 tvStatus.text = "Please wait for the app to connect to hub"
             }
@@ -80,18 +81,18 @@ class WifiLoginActivity : AppCompatActivity() {
 
     }
 
-    private fun loginToDevice(ip: String, username: String, password: String,count :Int) {
+    private fun loginToDevice(ip: String, username: String, password: String) {
         progressBar.visibility = ProgressBar.VISIBLE
         tvStatus.text = "Logging in..."
 
         val url = "http://$ip/login"
-        val userid = prefs.getString("userId", "-1") ?: "-1"
+        val userid = prefs.getInt("userId", -1)
 
         val jsonBody = JSONObject().apply {
             put("ssid", username)
             put("password", password)
             put ("user_id",userid)
-            put("count",count)
+//            put("count",count)
         }
 
         val request = object : StringRequest(
@@ -150,7 +151,7 @@ class WifiLoginActivity : AppCompatActivity() {
                     input.error = "Enter a valid number between 1 and 15"
                 } else {
                     dialog.dismiss()
-                    loginToDevice(ip, username, password, count)
+//                    loginToDevice(ip, username, password, count)
                 }
             }
         }
