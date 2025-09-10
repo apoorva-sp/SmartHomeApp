@@ -65,29 +65,33 @@ class WifiLoginActivity : AppCompatActivity() {
                 tvStatus.text = "Please enter username"
                 return@setOnClickListener
             }
-            if(password.isEmpty()){
+            if (password.isEmpty()) {
                 tvStatus.text = "Please enter password"
                 return@setOnClickListener
             }
 
             val ip = prefs.getString("gateway_ip", null)
             if (ip != null) {
-                loginToDevice(ip, username, password)
+                showDeviceCountDialog(ip, username, password) // 👈 Show dialog first
             } else {
                 tvStatus.text = "Please wait for the app to connect to hub"
             }
         }
+
     }
 
-    private fun loginToDevice(ip: String, username: String, password: String) {
+    private fun loginToDevice(ip: String, username: String, password: String,count :Int) {
         progressBar.visibility = ProgressBar.VISIBLE
         tvStatus.text = "Logging in..."
 
         val url = "http://$ip/login"
+        val userid = prefs.getString("userId", "-1") ?: "-1"
 
         val jsonBody = JSONObject().apply {
             put("ssid", username)
             put("password", password)
+            put ("user_id",userid)
+            put("count",count)
         }
 
         val request = object : StringRequest(
@@ -121,6 +125,39 @@ class WifiLoginActivity : AppCompatActivity() {
         }
         requestQueue.add(request)
     }
+
+    private fun showDeviceCountDialog(ip: String, username: String, password: String) {
+        val input = EditText(this).apply {
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER
+            hint = "Enter number of devices (1-15)"
+        }
+
+        val dialog = android.app.AlertDialog.Builder(this)
+            .setTitle("Number of Devices")
+            .setMessage("Please enter how many devices you want to connect (1-15)")
+            .setView(input)
+            .setPositiveButton("Confirm", null) // We'll override later
+            .setNegativeButton("Cancel", null)
+            .create()
+
+        dialog.setOnShowListener {
+            val button = dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE)
+            button.setOnClickListener {
+                val countText = input.text.toString().trim()
+                val count = countText.toIntOrNull()
+
+                if (count == null || count !in 1..15) {
+                    input.error = "Enter a valid number between 1 and 15"
+                } else {
+                    dialog.dismiss()
+                    loginToDevice(ip, username, password, count)
+                }
+            }
+        }
+
+        dialog.show()
+    }
+
 
     private fun goToHubStatusScreen() {
         val intent = Intent(this, HubPollingActivity::class.java)
