@@ -14,7 +14,7 @@ object BroadcastHelper {
     private const val BROADCAST_IP = "255.255.255.255" // ⚠️ make configurable if needed
     private const val TIMEOUT = 5000 // ms
 
-    suspend fun discoverDevice(message: String = "DISCOVER_HUB"): String? = withContext(Dispatchers.IO) {
+    suspend fun discoverDevice(message: String = "2"): String? = withContext(Dispatchers.IO) {
         var socket: DatagramSocket? = null
         return@withContext try {
             socket = DatagramSocket().apply {
@@ -52,7 +52,7 @@ object BroadcastHelper {
 
             return@withContext try {
                 val hubAddr = InetAddress.getByName(savedIp)
-                val message = "PING".toByteArray()
+                val message = "1".toByteArray()
                 val sendPacket = DatagramPacket(message, message.size, hubAddr, PORT)
                 socket.send(sendPacket)
 

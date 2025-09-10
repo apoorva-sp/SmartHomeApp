@@ -120,7 +120,7 @@ class WifiLoginActivity : AppCompatActivity() {
                 val params = HashMap<String, String>()
                 params["ssid"] = username
                 params["password"] = password
-                params["user_id"] = "-1"  // if needed
+                params["user_id"] = userid.toString()  // if needed
                 return params
             }
         }
