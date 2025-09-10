@@ -35,70 +35,91 @@ class IpDiscoveryActivity : AppCompatActivity() {
 
         val hub_ip = prefs.getString("hub_ip", null)
 
-        if (hub_ip == null) {
-            lifecycleScope.launch {
-                var reply: String? = null
-
-                // Try discovery 3 times
-                repeat(3) { attempt ->
-                    reply = BroadcastHelper.discoverDevice()
-                    if (reply != null) {
-                        Log.d("IpDiscoveryActivity", "Got reply on attempt ${attempt + 1}")
-                        return@repeat
-                    } else {
-                        Log.w("IpDiscoveryActivity", "No reply, attempt ${attempt + 1}")
-                        delay(1000) // wait 1s before retry
-                    }
-                }
-
-                if (reply != null) {
-                    try {
-                        val json = JSONObject(reply)
-                        val ip = json.getString("ip")
-
-                        with(prefs.edit()) {
-                            putString("hub_ip", ip)
-                            apply()
-                        }
-
-                        resultText.text = "✅ Hub found at: $ip"
-                        Log.d("broadcasthub", "Response: '$ip'")
-                        OpenAppliancePage()
-                    } catch (e: Exception) {
-                        Log.e("IpDiscoveryActivity", "JSON parse error: ${e.message}\nReply: $reply")
-                        resultText.text = "⚠️ Invalid response"
-                    }
-                } else {
-                    resultText.text = "❌ No reply after 3 attempts"
-                }
-
-                progressBar.visibility = View.GONE
-            }
-        } else {
-            lifecycleScope.launch {
-                var success = false
-                for (attempt in 1..3) {
-                    val isAlive = BroadcastHelper.verifyHubIp(hub_ip)
-                    if (isAlive) {
-                        success = true
-                        break
-                    }
-                }
-
-                progressBar.visibility = View.GONE
-
-                if (success) {
+        lifecycleScope.launch {
+            if (hub_ip == null) {
+                // No saved hub, discover via broadcast
+                val ip = discoverHubWithRetries()
+                handleDiscoveryResult(ip)
+            } else {
+                // Try unicast first
+                val isAlive = verifyHubWithRetries(hub_ip)
+                if (isAlive) {
+                    progressBar.visibility = View.GONE
                     resultText.text = "✅ Hub is alive at: $hub_ip"
                     OpenAppliancePage()
                 } else {
-                    resultText.text = "❌ Hub not responding, you are connected to a different network"
-                    Toast.makeText(
-                        this@IpDiscoveryActivity,
-                        "Hub is in a different network",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    Log.w("IpDiscoveryActivity", "Unicast verification failed, falling back to broadcast")
+                    val ip = discoverHubWithRetries()
+                    handleDiscoveryResult(ip)
                 }
             }
+        }
+    }
+
+    /**
+     * Try hub discovery via broadcast up to 3 times
+     */
+    private suspend fun discoverHubWithRetries(): String? {
+        var reply: String? = null
+        repeat(3) { attempt ->
+            reply = BroadcastHelper.discoverDevice()
+            if (reply != null) {
+                Log.d("IpDiscoveryActivity", "Got reply on attempt ${attempt + 1}")
+                return reply
+            } else {
+                Log.w("IpDiscoveryActivity", "No reply, attempt ${attempt + 1}")
+                delay(1000)
+            }
+        }
+        return reply
+    }
+
+    /**
+     * Try hub verification via unicast up to 3 times
+     */
+    private suspend fun verifyHubWithRetries(ip: String): Boolean {
+        repeat(3) { attempt ->
+            val isAlive = BroadcastHelper.verifyHubIp(ip)
+            if (isAlive) {
+                Log.d("IpDiscoveryActivity", "Hub alive on attempt ${attempt + 1}")
+                return true
+            } else {
+                Log.w("IpDiscoveryActivity", "Hub not responding, attempt ${attempt + 1}")
+                delay(500)
+            }
+        }
+        return false
+    }
+
+    /**
+     * Handle the reply from discovery
+     */
+    private fun handleDiscoveryResult(reply: String?) {
+        progressBar.visibility = View.GONE
+        if (reply != null) {
+            try {
+                val json = JSONObject(reply)
+                val ip = json.getString("ip")
+
+                with(prefs.edit()) {
+                    putString("hub_ip", ip)
+                    apply()
+                }
+
+                resultText.text = "✅ Hub found at: $ip"
+                Log.d("broadcasthub", "Response: '$ip'")
+                OpenAppliancePage()
+            } catch (e: Exception) {
+                Log.e("IpDiscoveryActivity", "JSON parse error: ${e.message}\nReply: $reply")
+                resultText.text = "⚠️ Invalid response"
+            }
+        } else {
+            resultText.text = "❌ No reply after 3 attempts"
+            Toast.makeText(
+                this@IpDiscoveryActivity,
+                "Hub not found in network",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
