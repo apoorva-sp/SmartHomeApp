@@ -14,13 +14,18 @@ object BroadcastHelper {
     private const val BROADCAST_IP = "255.255.255.255" // ⚠️ make configurable if needed
     private const val TIMEOUT = 5000 // ms
 
-    suspend fun discoverDevice(message: String = "2"): String? = withContext(Dispatchers.IO) {
+    suspend fun discoverDevice(): String? = withContext(Dispatchers.IO) {
         var socket: DatagramSocket? = null
         return@withContext try {
             socket = DatagramSocket().apply {
                 broadcast = true
                 soTimeout = TIMEOUT
             }
+            val message = """
+                {
+                  "type": 2
+                }
+            """.trimIndent()
 
             // Send broadcast
             val data = message.toByteArray()
@@ -50,9 +55,16 @@ object BroadcastHelper {
         DatagramSocket().use { socket ->
             socket.soTimeout = TIMEOUT
 
+            val jsonmsg = """
+                {
+                  "type": 1
+                }
+            """.trimIndent()
+
             return@withContext try {
                 val hubAddr = InetAddress.getByName(savedIp)
-                val message = "1".toByteArray()
+
+                val message = jsonmsg.toByteArray()
                 val sendPacket = DatagramPacket(message, message.size, hubAddr, PORT)
                 socket.send(sendPacket)
 
