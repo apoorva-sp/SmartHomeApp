@@ -4,6 +4,6 @@ data class Device(
     val device_id: String,
     val device_name: String,
     val switch_board_id: String,
-    val status: String,
+    var status: String,
     val device_type:String
 )
