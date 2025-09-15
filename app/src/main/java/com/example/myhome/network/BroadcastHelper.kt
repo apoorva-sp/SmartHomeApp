@@ -73,7 +73,11 @@ object BroadcastHelper {
                 socket.receive(receivePacket)
 
                 val response = String(receivePacket.data, 0, receivePacket.length).trim()
-                response == "ACK"
+                // ✅ Parse JSON response safely
+                val json = org.json.JSONObject(response)
+                val type = json.optInt("type", -1)
+
+                type == 3 // success only if type == 3
             } catch (e: Exception) {
                 e.printStackTrace()
                 false
