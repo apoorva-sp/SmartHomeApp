@@ -74,7 +74,7 @@ class AppliancesActivity : AppCompatActivity() {
         val requestBody = JSONObject()
         requestBody.put("serviceID", 2)
         prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        val userId = prefs.getInt("userId",5)
+        val userId = prefs.getInt("userId",-1)
 
         requestBody.put("user_id", userId)
 
