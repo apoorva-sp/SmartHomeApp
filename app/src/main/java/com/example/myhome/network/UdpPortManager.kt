@@ -65,7 +65,7 @@ object UdpPortManager {
             try {
                 DatagramSocket().use { tempSocket ->
                     tempSocket.broadcast = true
-                    val message = """{"type":12}"""
+                    val message = """{"type":5}"""
                     val data = message.toByteArray()
                     val packet = DatagramPacket(
                         data,
