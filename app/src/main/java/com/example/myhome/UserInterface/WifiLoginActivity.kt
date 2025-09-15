@@ -86,8 +86,12 @@ class WifiLoginActivity : AppCompatActivity() {
                 Toast.makeText(this,"Wait for the device to connect to hub",Toast.LENGTH_SHORT)
             }
             else{
-
-                goToHubStatusScreen()
+                prefs.edit()
+                    .putBoolean("is_esp32_setup_done", true)
+                    .apply()
+                val intent = Intent(this, IpDiscoveryActivity::class.java)
+                startActivity(intent)
+                finish()
             }
 
         }

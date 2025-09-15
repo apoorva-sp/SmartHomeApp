@@ -150,7 +150,7 @@ class LoginSignupActivity : AppCompatActivity() {
                     Log.d(TAG, "Login response: code=$code, message=$message, userId=$userId, username=$username") // ⭐ log success
 
                     Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this, IpDiscoveryActivity::class.java))
+                    startActivity(Intent(this,WifiLoginActivity::class.java))
                     finish()
                 } else {
                     Toast.makeText(this, "Login failed: $message", Toast.LENGTH_LONG).show()
