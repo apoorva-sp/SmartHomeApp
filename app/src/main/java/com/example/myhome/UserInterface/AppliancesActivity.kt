@@ -173,7 +173,8 @@ class AppliancesActivity : AppCompatActivity() {
         toggleSwitch: Switch,
         previousState: Boolean
     ) {
-        val url = "http://<ip>/toggle/$deviceId"
+        val hub_ip = prefs.getString("hub_ip", null)
+        val url = "http://$hub_ip/toggle/$deviceId"
 
         toggleSwitch.isEnabled = false // disable until response
 

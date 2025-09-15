@@ -29,6 +29,7 @@ class WifiLoginActivity : AppCompatActivity() {
     private var gatewayIp: String? = null
     private lateinit var prefs: android.content.SharedPreferences // ⭐ cache prefs
     private var savedIp: String? = ""
+    private lateinit var tvSkip :TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,6 +40,7 @@ class WifiLoginActivity : AppCompatActivity() {
         btnLogin = findViewById(R.id.btnLogin)
         tvStatus = findViewById(R.id.tvStatus)
         progressBar = findViewById(R.id.progressBar)
+        tvSkip = findViewById(R.id.tvSkip)
 
         prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         requestQueue = Volley.newRequestQueue(this)
@@ -77,6 +79,17 @@ class WifiLoginActivity : AppCompatActivity() {
             } else {
                 tvStatus.text = "Please wait for the app to connect to hub"
             }
+        }
+
+        tvSkip.setOnClickListener {
+            if(savedIp ==null){
+                Toast.makeText(this,"Wait for the device to connect to hub",Toast.LENGTH_SHORT)
+            }
+            else{
+
+                goToHubStatusScreen()
+            }
+
         }
 
     }

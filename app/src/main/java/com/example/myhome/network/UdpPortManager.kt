@@ -14,6 +14,7 @@ object UdpPortManager {
     private var socket: DatagramSocket? = null
     private var listenJob: Job? = null
     private val TAG = "UdpPortManager"
+    private const val BROADCAST_IP = "255.255.255.255"
 
     // 🔹 LiveData to expose received messages globally
     private val _messages = MutableLiveData<Pair<String, InetAddress>>()
@@ -52,15 +53,35 @@ object UdpPortManager {
     }
 
     fun stopListening() {
+        // 🔹 Cancel the listening job and close the socket
         listenJob?.cancel()
         listenJob = null
         socket?.close()
         socket = null
         Log.d(TAG, "Stopped UDP listener on port $PORT")
+
+        // 🔹 Send a broadcast stop message with a fresh socket
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                DatagramSocket().use { tempSocket ->
+                    tempSocket.broadcast = true
+                    val message = """{"type":12}"""
+                    val data = message.toByteArray()
+                    val packet = DatagramPacket(
+                        data,
+                        data.size,
+                        InetAddress.getByName("255.255.255.255"),
+                        PORT
+                    )
+                    tempSocket.send(packet)
+                    Log.d(TAG, "Stop message broadcasted on port $PORT")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to send stop message: ${e.message}", e)
+            }
+        }
     }
 
-//    UdpPortManager.messages.observe(this) { (msg, addr) ->
-//        // Update UI or trigger logic
-//        textView.text = "📩 $msg from ${addr.hostAddress}"
-//    }
+
+
 }

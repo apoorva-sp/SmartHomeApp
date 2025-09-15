@@ -53,11 +53,7 @@ class LoginSignupActivity : AppCompatActivity() {
 
         setContentView(R.layout.login_v2)
 
-//        UdpPortManager.messages.observe(this) { (msg, sender) ->
-//            // Here you get each incoming UDP message
-//            Log.d("LoginSignupActivity", "Message: $msg from $sender")
-//
-//        }
+
 
 
         // Initialize views
@@ -92,7 +88,7 @@ class LoginSignupActivity : AppCompatActivity() {
 
                     if (savedPhone == phone && savedPassword == password) {
                         Toast.makeText(this, "Login successful (local)!", Toast.LENGTH_SHORT).show()
-                        startActivity(Intent(this, AppliancesActivity::class.java))
+                        startActivity(Intent(this, IpDiscoveryActivity::class.java))
                         finish()
                     } else {
                         login(phone, password) // fallback → call API
@@ -154,7 +150,7 @@ class LoginSignupActivity : AppCompatActivity() {
                     Log.d(TAG, "Login response: code=$code, message=$message, userId=$userId, username=$username") // ⭐ log success
 
                     Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this, AppliancesActivity::class.java))
+                    startActivity(Intent(this, IpDiscoveryActivity::class.java))
                     finish()
                 } else {
                     Toast.makeText(this, "Login failed: $message", Toast.LENGTH_LONG).show()
