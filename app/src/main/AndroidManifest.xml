@@ -16,6 +16,8 @@
     <application
         android:name=".MyApp"
         android:allowBackup="true"
+        android:usesCleartextTraffic="true"
+
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:networkSecurityConfig="@xml/network_security_config"

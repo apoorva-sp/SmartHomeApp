@@ -181,7 +181,9 @@ class AppliancesActivity : AppCompatActivity() {
         val request = JsonObjectRequest(
             Request.Method.GET, url, null,
             { response ->
-                // success
+                // ✅ Log success response
+                Log.d("ToggleDevice", "Success response: $response")
+
                 Toast.makeText(
                     this,
                     "Device $deviceId turned $newStatus",
@@ -195,7 +197,9 @@ class AppliancesActivity : AppCompatActivity() {
                 toggleSwitch.isEnabled = true
             },
             { error ->
-                // failure → revert switch
+                // ❌ Log error response
+                Log.e("ToggleDevice", "Error toggling device $deviceId, Error: ${error.message}", error)
+
                 Toast.makeText(
                     this,
                     "Error: ${error.message}",
@@ -213,6 +217,7 @@ class AppliancesActivity : AppCompatActivity() {
             }
         )
 
+        Log.d("ToggleDevice", "Sending request to: $url with newStatus=$newStatus")
         Volley.newRequestQueue(this).add(request)
     }
 

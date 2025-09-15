@@ -8,6 +8,7 @@ import kotlinx.coroutines.*
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
+import java.net.SocketException
 
 object UdpPortManager {
     private const val PORT = 5000
@@ -32,25 +33,34 @@ object UdpPortManager {
                 Log.d(TAG, "UDP socket bound to port $PORT")
 
                 val buffer = ByteArray(1024)
-                while (isActive) {
+                while (isActive && socket != null && !socket!!.isClosed) {
                     val packet = DatagramPacket(buffer, buffer.size)
-                    socket?.receive(packet)
+                    try {
+                        socket?.receive(packet)  // blocking call
+                        val msg = String(packet.data, 0, packet.length)
+                        Log.d(TAG, "Received: $msg from ${packet.address.hostAddress}")
 
-                    val msg = String(packet.data, 0, packet.length)
-                    Log.d(TAG, "Received: $msg from ${packet.address.hostAddress}")
-
-                    // Post to LiveData (thread-safe)
-                    _messages.postValue(msg to packet.address)
+                        // Post to LiveData (thread-safe)
+                        _messages.postValue(msg to packet.address)
+                    } catch (e: SocketException) {
+                        if (socket?.isClosed == true) {
+                            Log.d(TAG, "UDP socket closed by stopListening()")
+                            break
+                        } else {
+                            Log.e(TAG, "Socket exception: ${e.message}", e)
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error in UDP listener: ${e.message}", e)
             } finally {
                 socket?.close()
                 socket = null
-                Log.d(TAG, "UDP socket closed")
+                Log.d(TAG, "UDP socket closed (finally)")
             }
         }
     }
+
 
     fun stopListening() {
         // 🔹 Cancel the listening job and close the socket
