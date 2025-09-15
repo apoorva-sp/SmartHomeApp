@@ -21,11 +21,7 @@ object BroadcastHelper {
                 broadcast = true
                 soTimeout = TIMEOUT
             }
-            val message = """
-                {
-                  "type": 2
-                }
-            """.trimIndent()
+            val message = """{"type":2}"""
 
             // Send broadcast
             val data = message.toByteArray()
@@ -55,11 +51,7 @@ object BroadcastHelper {
         DatagramSocket().use { socket ->
             socket.soTimeout = TIMEOUT
 
-            val jsonmsg = """
-                {
-                  "type": 1
-                }
-            """.trimIndent()
+            val jsonmsg = """{"type":1}"""
 
             return@withContext try {
                 val hubAddr = InetAddress.getByName(savedIp)
