@@ -4,33 +4,44 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.drawerlayout.widget.DrawerLayout
 import com.android.volley.Request
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import com.example.myhome.Beans.Device
 import com.example.myhome.R
 import com.example.myhome.network.UdpPortManager
+import androidx.core.view.GravityCompat
+import com.example.myhome.utils.ExitUtils
+
+import com.google.android.material.navigation.NavigationView
 import org.json.JSONObject
 
 class AppliancesActivity : AppCompatActivity() {
 
     private lateinit var gridLayout: GridLayout
-    private lateinit var backtohome: TextView
     private lateinit var prefs: android.content.SharedPreferences
     private lateinit var menuButton: ImageButton
     private val devices = mutableListOf<Device>()
+
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var navigationView: NavigationView
+    private lateinit var drawerToggle: ImageButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.appliances)
 
         gridLayout = findViewById(R.id.gridLayoutDevices)
-        backtohome = findViewById(R.id.backtohome)
-        menuButton = findViewById(R.id.menuButton)
+        drawerLayout = findViewById(R.id.drawerLayout)
+        navigationView = findViewById(R.id.navigationView)
+        drawerToggle = findViewById(R.id.drawerToggle)
 
         fetchDevices()
+        setupDrawer()
 
         // UDP listener
         UdpPortManager.messages.observe(this) { (msg, sender) ->
@@ -59,12 +70,6 @@ class AppliancesActivity : AppCompatActivity() {
             }
         }
 
-
-        setupMenuButton()
-
-        backtohome.setOnClickListener {
-            finish()
-        }
     }
 
     // fetch device info once
@@ -341,6 +346,88 @@ class AppliancesActivity : AppCompatActivity() {
 
         Volley.newRequestQueue(this).add(request)
     }
+
+    private fun setupDrawer() {
+        // open drawer when hamburger clicked
+        drawerToggle.setOnClickListener {
+            drawerLayout.openDrawer(GravityCompat.START)
+        }
+        // Access header view inside NavigationView
+        val headerView = navigationView.getHeaderView(0)
+        val tvUsername = headerView.findViewById<TextView>(R.id.profileName)
+
+        // Load from SharedPreferences
+        val prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        var username = prefs.getString("username", "Guest") // fallback = Guest
+        if(username ==""|| username == null){
+            username = "Guest"
+        }
+        tvUsername.text = username
+        // handle navigation menu clicks
+        navigationView.setNavigationItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.nav_home -> {
+                    val intent = Intent(this, AppliancesActivity::class.java)
+                    // Clear back stack so Home becomes the root
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
+                    true
+                }
+
+//                R.id.nav_profile -> {
+//                    val intent = Intent(this, ProfileActivity::class.java)
+//                    startActivity(intent)
+//                    true
+//                }
+
+//                R.id.add_device -> {
+//                    val intent = Intent(this, AddDeviceActivity::class.java)
+//                    startActivity(intent)
+//                    true
+//                }
+
+//                R.id.update_wifi_cred -> {
+//                    val intent = Intent(this, WifiActivity::class.java)
+//                    startActivity(intent)
+//                    true
+//                }
+
+                R.id.nav_logout -> {
+                    handleLogout()
+                    true
+                }
+
+                else -> false
+            }.also {
+                drawerLayout.closeDrawer(GravityCompat.START)
+            }
+        }
+
+    }
+
+    private fun handleLogout() {
+        Toast.makeText(this, "Signing out...", Toast.LENGTH_SHORT).show()
+        prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        prefs.edit()
+            .remove("phone")
+            .remove("password")
+            .remove("is_logged_in")
+            .apply()
+
+        val intent = Intent(this, LoginSignupActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
+    }
+
+    override fun onBackPressed() {
+        if (isTaskRoot) {
+            ExitUtils.showExitDialog(this)
+        } else {
+            super.onBackPressed()
+        }
+    }
+
 
 
 

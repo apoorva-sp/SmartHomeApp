@@ -1,75 +1,96 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:padding="16dp"
-    android:background="@android:color/white">
+    android:id="@+id/drawerLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-    <ScrollView
+    <!-- Main Content -->
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/addAnotherHomeBtn">
+        android:padding="16dp"
+        android:background="@android:color/white">
 
-        <LinearLayout
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="match_parent"
+            android:layout_above="@+id/addAnotherHomeBtn">
 
-
-            <!-- Top Bar -->
             <LinearLayout
-                android:id="@+id/headerSection"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingVertical="8dp">
+                android:orientation="vertical">
 
-                <!-- Back button text -->
-                <TextView
-                    android:id="@+id/backtohome"
-                    android:layout_width="wrap_content"
+                <!-- Top Bar -->
+                <LinearLayout
+                    android:id="@+id/headerSection"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="← Back to Home"
-                    android:textStyle="bold"
-                    android:textSize="16sp"
-                    android:textColor="@android:color/black"
-                    android:layout_weight="1" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingVertical="8dp">
 
-                <!-- 3-dot menu button -->
-                <ImageButton
-                    android:id="@+id/menuButton"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_more_vert"
-                    android:contentDescription="Menu"
-                    app:tint="@android:color/black"
-                    android:padding="12dp" />
+                    <!-- Hamburger icon (for drawer) -->
+                    <ImageButton
+                        android:id="@+id/drawerToggle"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_menu"
+                        android:contentDescription="@string/menu"
+                        app:tint="@android:color/black"
+                        android:padding="8dp" />
+
+                    <!-- Search box -->
+                    <EditText
+                        android:id="@+id/searchBox"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:hint="Search..."
+                        android:paddingHorizontal="12dp"
+                        android:background="@android:drawable/edit_text"
+                        android:inputType="text" />
+
+                    <!-- Search button -->
+                    <Button
+                        android:id="@+id/searchButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:text="Go"
+                        android:layout_marginStart="4dp"
+                        android:paddingHorizontal="10dp"
+                        android:background="@drawable/dark_button_bg"
+                        android:textColor="@android:color/white"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <!-- Dynamic Device Cards Grid -->
+                <GridLayout
+                    android:id="@+id/gridLayoutDevices"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:columnCount="1"
+                    android:useDefaultMargins="true"
+                    android:alignmentMode="alignMargins" />
             </LinearLayout>
+        </ScrollView>
 
 
-            <!-- Dynamic Device Cards Grid -->
-            <GridLayout
-                android:id="@+id/gridLayoutDevices"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:columnCount="1"
-                android:useDefaultMargins="true"
-                android:alignmentMode="alignMargins" />
-        </LinearLayout>
-    </ScrollView>
+    </RelativeLayout>
 
-    <!-- Fixed Add Another Device Button (matching the "Add Another Home" style) -->
-    <Button
-        android:id="@+id/addAnotherHomeBtn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="+ Add Another Device"
-        android:background="@drawable/dark_button_bg"
-        android:textColor="@android:color/white"
-        android:layout_alignParentBottom="true"
-        android:paddingVertical="12dp" />
-</RelativeLayout>
+    <!-- Navigation Drawer Content -->
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/navigationView"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="@android:color/white"
+        app:menu="@menu/drawer_menu"
+        app:headerLayout="@layout/drawer_header" />
+
+</androidx.drawerlayout.widget.DrawerLayout>
