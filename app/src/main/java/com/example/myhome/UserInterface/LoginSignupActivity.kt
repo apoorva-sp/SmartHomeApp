@@ -12,6 +12,7 @@ import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import org.json.JSONObject
 import android.util.Log
+import com.example.myhome.Keys
 import com.example.myhome.R
 import com.example.myhome.network.UdpPortManager
 
@@ -67,7 +68,7 @@ class LoginSignupActivity : AppCompatActivity() {
         tvUsernameLabel = findViewById(R.id.tvUsernameLabel)
 
         requestQueue = Volley.newRequestQueue(this)
-        url = "https://capstone.pivotpt.in/userAPI.php"
+        url = Keys.BaseURL +"userAPI.php"
 
         btnAction.setOnClickListener {
             val phone = edtPhone.text.toString().trim()

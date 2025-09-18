@@ -12,6 +12,7 @@ import com.android.volley.Request
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
+import com.example.myhome.Keys
 import com.example.myhome.R
 import com.example.myhome.utils.ExitUtils
 import com.example.myhome.utils.NavigationBarActivity
@@ -38,7 +39,7 @@ class ProfileActivity : NavigationBarActivity() {
 
         // Init Volley
         requestQueue = Volley.newRequestQueue(this)
-        url = "https://capstone.pivotpt.in/userAPI.php"
+        url = Keys.BaseURL+"userAPI.php"
 
         // Retrieve user_id from SharedPreferences
         prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)

@@ -4,5 +4,6 @@ class Keys {
     companion object {
         const val SSID = "ESP32_Config"       // ✅ const for compile-time constants
         const val Password = "12345678"
+        const val BaseURL ="https://capstone.pivotpt.in/api/"
     }
 }

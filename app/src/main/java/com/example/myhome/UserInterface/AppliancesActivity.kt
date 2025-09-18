@@ -11,6 +11,7 @@ import com.android.volley.Request
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import com.example.myhome.Beans.Device
+import com.example.myhome.Keys
 import com.example.myhome.R
 import com.example.myhome.network.UdpPortManager
 import com.example.myhome.utils.ExitUtils
@@ -24,6 +25,7 @@ class AppliancesActivity : NavigationBarActivity() {   // ✅ Now extends BaseAc
     private val devices = mutableListOf<Device>()
     private lateinit var searchBox: EditText
     private lateinit var searchButton: Button
+    private var url =""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,6 +39,8 @@ class AppliancesActivity : NavigationBarActivity() {   // ✅ Now extends BaseAc
         gridLayout = findViewById(R.id.gridLayoutDevices)
         searchBox = findViewById(R.id.searchBox)
         searchButton = findViewById(R.id.searchButton)
+
+        url = Keys.BaseURL+"esp32API.php"
 
         prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
 
@@ -111,7 +115,7 @@ class AppliancesActivity : NavigationBarActivity() {   // ✅ Now extends BaseAc
      *  ------------------------ */
 
     private fun fetchDevices() {
-        val url = "https://capstone.pivotpt.in/esp32API.php"
+
 
         val requestBody = JSONObject().apply {
             put("serviceID", 2)
@@ -157,12 +161,12 @@ class AppliancesActivity : NavigationBarActivity() {   // ✅ Now extends BaseAc
         previousState: Boolean
     ) {
         val hub_ip = prefs.getString("hub_ip", null)
-        val url = "http://$hub_ip/toggle/$deviceId"
+        val hub_url = "http://$hub_ip/toggle/$deviceId"
 
         toggleSwitch.isEnabled = false
 
         val request = JsonObjectRequest(
-            Request.Method.GET, url, null,
+            Request.Method.GET, hub_url, null,
             { response ->
                 Log.d("ToggleDevice", "Success response: $response")
                 devices.find { it.device_id == deviceId }?.status = newStatus
@@ -278,7 +282,7 @@ class AppliancesActivity : NavigationBarActivity() {   // ✅ Now extends BaseAc
             put("device_type", newType)
         }
 
-        val url = "https://capstone.pivotpt.in/esp32API.php"
+
         val request = JsonObjectRequest(
             Request.Method.POST, url, requestBody,
             { response ->

@@ -53,7 +53,9 @@ class WifiLoginActivity : AppCompatActivity() {
             // Save IP for later
             prefs.edit().putString("gateway_ip", gatewayIp).apply()
             savedIp = gatewayIp
-            tvStatus.text = "mobile connected to hub"
+            if(savedIp!=""){
+                tvStatus.text = "mobile connected to hub"
+            }
 
         }
         //call the function to connect to esp32 hub
@@ -82,7 +84,7 @@ class WifiLoginActivity : AppCompatActivity() {
         }
 
         tvSkip.setOnClickListener {
-            if(savedIp ==null){
+            if(savedIp ==null || savedIp == ""){
                 Toast.makeText(this,"Wait for the device to connect to hub",Toast.LENGTH_SHORT)
             }
             else{
