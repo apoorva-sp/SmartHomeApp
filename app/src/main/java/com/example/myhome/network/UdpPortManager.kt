@@ -1,6 +1,7 @@
 // File: app/src/main/java/com/example/myhome/network/UdpPortManager.kt
 package com.example.myhome.network
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -62,7 +63,7 @@ object UdpPortManager {
     }
 
 
-    fun stopListening() {
+    fun stopListening(context: Context) {
         // 🔹 Cancel the listening job and close the socket
         listenJob?.cancel()
         listenJob = null
@@ -73,6 +74,12 @@ object UdpPortManager {
         // 🔹 Send a broadcast stop message with a fresh socket
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                // ✅ Acquire multicast lock before broadcasting
+                val wifiManager = context.applicationContext.getSystemService(android.content.Context.WIFI_SERVICE) as android.net.wifi.WifiManager
+                val lock = wifiManager.createMulticastLock("udpStopLock")
+                lock.setReferenceCounted(true)
+                lock.acquire()
+
                 DatagramSocket().use { tempSocket ->
                     tempSocket.broadcast = true
                     val message = """{"type":5}"""
@@ -84,13 +91,17 @@ object UdpPortManager {
                         PORT
                     )
                     tempSocket.send(packet)
-                    Log.d(TAG, "Stop message broadcasted on port $PORT")
+                    Log.d(TAG, "Stop message broadcasted to 255.255.255.255 on port $PORT")
                 }
+
+                // ✅ Always release the lock after sending
+                lock.release()
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to send stop message: ${e.message}", e)
             }
         }
     }
+
 
 
 

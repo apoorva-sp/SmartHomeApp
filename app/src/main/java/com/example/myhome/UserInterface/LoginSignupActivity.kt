@@ -40,14 +40,15 @@ class LoginSignupActivity : AppCompatActivity() {
 
         // If already logged in and esp32 setup also done  → go straight to Home
         if (prefs.getBoolean("is_logged_in", false) && prefs.getBoolean("is_esp32_setup_done",false)) {
-            startActivity(Intent(this, IpDiscoveryActivity::class.java))
+            val intent = Intent(this, IpDiscoveryActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
             finish()
             return
-        }
-        // if logged in but could not complete the esp32 setup
-        else if(prefs.getBoolean("is_logged_in", false) && !prefs.getBoolean("is_esp32_setup_done",false)){
-            //open the esp32polling connection intent ie; hubstatusActivity
-            startActivity(Intent(this, WifiLoginActivity::class.java))
+        } else if (prefs.getBoolean("is_logged_in", false) && !prefs.getBoolean("is_esp32_setup_done",false)) {
+            val intent = Intent(this, WifiLoginActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
             finish()
             return
         }
@@ -89,7 +90,9 @@ class LoginSignupActivity : AppCompatActivity() {
 
                     if (savedPhone == phone && savedPassword == password) {
                         Toast.makeText(this, "Login successful (local)!", Toast.LENGTH_SHORT).show()
-                        startActivity(Intent(this, IpDiscoveryActivity::class.java))
+                        val intent = Intent(this, IpDiscoveryActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
                         finish()
                     } else {
                         login(phone, password) // fallback → call API
@@ -151,7 +154,9 @@ class LoginSignupActivity : AppCompatActivity() {
                     Log.d(TAG, "Login response: code=$code, message=$message, userId=$userId, username=$username") // ⭐ log success
 
                     Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this,WifiLoginActivity::class.java))
+                    val intent = Intent(this, WifiLoginActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
                     finish()
                 } else {
                     Toast.makeText(this, "Login failed: $message", Toast.LENGTH_LONG).show()
@@ -196,7 +201,9 @@ class LoginSignupActivity : AppCompatActivity() {
                     Log.d(TAG, "Signup response: code=$code, message=$message, userId=$userId") // ⭐ log success
 
                     Toast.makeText(this, "Signup successful!", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this, WifiLoginActivity::class.java))
+                    val intent = Intent(this, WifiLoginActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
                     finish()
                 } else {
                     Toast.makeText(this, "Signup failed: $message", Toast.LENGTH_LONG).show()

@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.myhome.R
 import com.example.myhome.network.BroadcastHelper
+import com.example.myhome.network.MqttHelper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONObject
@@ -51,6 +52,16 @@ class IpDiscoveryActivity : AppCompatActivity() {
                     Log.w("IpDiscoveryActivity", "Unicast verification failed, falling back to broadcast")
                     val ip = discoverHubWithRetries()
                     handleDiscoveryResult(ip)
+                    if (ip.isNullOrEmpty()) {
+                        launch {
+                            Log.w("IpDiscoveryActivity", "Publishing fallback MQTT (saved hub unreachable)")
+                            MqttHelper.publishMessage(
+                                this@IpDiscoveryActivity,
+                                """{"type":2}"""
+                            )
+                        }
+                    }
+
                 }
             }
         }
@@ -125,6 +136,7 @@ class IpDiscoveryActivity : AppCompatActivity() {
 
     private fun OpenAppliancePage() {
         val intent = Intent(this, AppliancesActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
     }

@@ -92,6 +92,8 @@ class WifiLoginActivity : AppCompatActivity() {
                     .putBoolean("is_esp32_setup_done", true)
                     .apply()
                 val intent = Intent(this, IpDiscoveryActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+
                 startActivity(intent)
                 finish()
             }
