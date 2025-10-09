@@ -39,6 +39,7 @@
         <activity android:name=".UserInterface.IpDiscoveryActivity" />
         <activity android:name=".UserInterface.ProfileActivity" />
         <activity android:name=".utils.NavigationBarActivity" />
+        <activity android:name=".UserInterface.WifiUpdateActivity" />
 
         <!-- Launcher Activity -->
         <activity

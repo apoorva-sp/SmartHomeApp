@@ -55,9 +55,6 @@ class LoginSignupActivity : AppCompatActivity() {
 
         setContentView(R.layout.login_v2)
 
-
-
-
         // Initialize views
         edtPhone = findViewById(R.id.etPhone)
         edtPassword = findViewById(R.id.etPassword)

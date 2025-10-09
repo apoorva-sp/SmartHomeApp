@@ -41,12 +41,15 @@ class IpDiscoveryActivity : AppCompatActivity() {
                 // No saved hub, discover via broadcast
                 val ip = discoverHubWithRetries()
                 handleDiscoveryResult(ip)
+
             } else {
                 // Try unicast first
                 val isAlive = verifyHubWithRetries(hub_ip)
                 if (isAlive) {
                     progressBar.visibility = View.GONE
                     resultText.text = "✅ Hub is alive at: $hub_ip"
+                    prefs.edit()
+                        .putBoolean("LAN", true).apply()
                     OpenAppliancePage()
                 } else {
                     Log.w("IpDiscoveryActivity", "Unicast verification failed, falling back to broadcast")
@@ -59,6 +62,8 @@ class IpDiscoveryActivity : AppCompatActivity() {
                                 this@IpDiscoveryActivity,
                                 """{"type":2}"""
                             )
+                            prefs.edit()
+                                .putBoolean("LAN", false).apply()////////////////////////////check the correctness of its placement once mqtt is setup
                         }
                     }
 
@@ -67,9 +72,6 @@ class IpDiscoveryActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Try hub discovery via broadcast up to 3 times
-     */
     private suspend fun discoverHubWithRetries(): String? {
         var reply: String? = null
         repeat(3) { attempt ->
@@ -85,9 +87,6 @@ class IpDiscoveryActivity : AppCompatActivity() {
         return reply
     }
 
-    /**
-     * Try hub verification via unicast up to 3 times
-     */
     private suspend fun verifyHubWithRetries(ip: String): Boolean {
         repeat(3) { attempt ->
             val isAlive = BroadcastHelper.verifyHubIp(ip)
@@ -116,6 +115,8 @@ class IpDiscoveryActivity : AppCompatActivity() {
                     putString("hub_ip", ip)
                     apply()
                 }
+                prefs.edit()
+                    .putBoolean("LAN", true).apply()
 
                 resultText.text = "✅ Hub found at: $ip"
                 Log.d("broadcasthub", "Response: '$ip'")
