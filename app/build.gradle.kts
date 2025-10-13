@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+
 android {
     namespace = "com.example.myhome"
     compileSdk = 35
@@ -37,6 +38,14 @@ android {
     buildFeatures {
         compose = true
     }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/INDEX.LIST"
+            excludes += "META-INF/io.netty.versions.properties"
+        }
+    }
+
 }
 
 dependencies {
@@ -50,12 +59,10 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.appcompat)
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation ("androidx.cardview:cardview:1.0.0")
-    implementation ("com.android.volley:volley:1.2.1")
-    implementation ("com.google.android.material:material:1.9.0")
-    implementation ("com.google.android.material:material:<latest-version>")
-    implementation ("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
-    implementation ("org.eclipse.paho:org.eclipse.paho.android.service:1.1.1")
+    implementation("androidx.cardview:cardview:1.0.0")
+    implementation("com.android.volley:volley:1.2.1")
+    implementation("com.google.android.material:material:1.9.0")
+    implementation ("com.hivemq:hivemq-mqtt-client:1.3.1")
 
 
 

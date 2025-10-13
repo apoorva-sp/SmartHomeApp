@@ -56,17 +56,8 @@ class IpDiscoveryActivity : AppCompatActivity() {
                     val ip = discoverHubWithRetries()
                     handleDiscoveryResult(ip)
                     if (ip.isNullOrEmpty()) {
-                        launch {
-                            Log.w("IpDiscoveryActivity", "Publishing fallback MQTT (saved hub unreachable)")
-                            MqttHelper.publishMessage(
-                                this@IpDiscoveryActivity,
-                                """{"type":2}"""
-                            )
-                            prefs.edit()
-                                .putBoolean("LAN", false).apply()////////////////////////////check the correctness of its placement once mqtt is setup
-                        }
+                        connectToMqtt()
                     }
-
                 }
             }
         }
@@ -101,9 +92,6 @@ class IpDiscoveryActivity : AppCompatActivity() {
         return false
     }
 
-    /**
-     * Handle the reply from discovery
-     */
     private fun handleDiscoveryResult(reply: String?) {
         progressBar.visibility = View.GONE
         if (reply != null) {
@@ -134,6 +122,32 @@ class IpDiscoveryActivity : AppCompatActivity() {
             ).show()
         }
     }
+
+    private fun connectToMqtt() {
+        MqttHelper.init(this@IpDiscoveryActivity)
+        MqttHelper.connect(
+            onConnected = {
+                runOnUiThread {
+                    progressBar.visibility = View.GONE
+                    resultText.text = "✅ Connected to hub via MQTT"
+                    prefs.edit()
+                        .putBoolean("LAN", false).apply()
+                    val json = JSONObject().apply {
+                        put("type", 1)
+                    }
+                    MqttHelper.publish(json.toString(), qos = 1)//say hello
+                    OpenAppliancePage()
+                }
+            },
+            onFailure = { error ->
+                runOnUiThread {
+                    progressBar.visibility = View.GONE
+                    resultText.text = "❌ MQTT connection failed: ${error?.message}"
+                }
+            }
+        )
+    }
+
 
     private fun OpenAppliancePage() {
         val intent = Intent(this, AppliancesActivity::class.java)

@@ -12,7 +12,7 @@ object BroadcastHelper {
 
     private const val PORT = 5000
     private const val BROADCAST_IP = "255.255.255.255" // ⚠️ make configurable if needed
-    private const val TIMEOUT = 5000 // ms
+    private const val TIMEOUT = 1000 // ms
 
     suspend fun discoverDevice(): String? = withContext(Dispatchers.IO) {
         var socket: DatagramSocket? = null
