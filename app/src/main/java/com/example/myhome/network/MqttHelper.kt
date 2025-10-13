@@ -17,20 +17,11 @@ object MqttHelper {
     private const val USERNAME = "capstone"
     private const val PASSWORD = "capstone"
 
-    // The client is now a HiveMQ Mqtt5AsyncClient
     private var client: Mqtt5AsyncClient? = null
-
-    // Configuration loaded from SharedPreferences
     private var pub: String = ""
     private var sub: String = ""
-
-    // This logic remains the same: a list to hold callbacks from different parts of your app
     private val listeners = mutableListOf<(String) -> Unit>()
 
-    /**
-     * Initializes the helper by reading user-specific topics from SharedPreferences.
-     * The client itself is now created during the connect() call.
-     */
     fun init(context: Context) {
         val appContext = context.applicationContext
         val prefs = appContext.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
@@ -38,12 +29,6 @@ object MqttHelper {
         pub = "hub/$userId/cmd"
         sub = "hub/$userId/data"
     }
-
-    /**
-     * Connects to the MQTT broker.
-     * Creates the client on the first connection attempt.
-     */
-    // In MqttHelper.kt
 
     fun connect(onConnected: (() -> Unit)? = null, onFailure: ((Throwable?) -> Unit)? = null) {
         if (isConnected()) {
@@ -67,7 +52,6 @@ object MqttHelper {
             }
             .buildAsync()
 
-        // Add .cleanStart(true) to the connect options
         client?.connect(
             Mqtt5Connect.builder()
                 .cleanStart(true)
@@ -85,24 +69,15 @@ object MqttHelper {
             }
     }
 
-    /**
-     * Registers a new listener to receive messages.
-     * This allows multiple parts of your app (e.g., different Fragments) to listen.
-     */
     fun subscribe(onMessageReceived: (String) -> Unit) {
         if (!listeners.contains(onMessageReceived)) {
             listeners.add(onMessageReceived)
         }
-        // If already connected, ensure the subscription is active.
         if (isConnected()) {
             subscribeToTopic()
         }
     }
 
-    /**
-     * The actual MQTT subscription. This is called once to listen on the topic.
-     * The received message is then distributed to all registered listeners.
-     */
     private fun subscribeToTopic(qos: Int = 1) {
         if (!isConnected()) return
 
@@ -110,8 +85,6 @@ object MqttHelper {
             ?.topicFilter(sub)
             ?.qos(MqttQos.fromCode(qos) ?: MqttQos.AT_LEAST_ONCE)
             ?.callback { publish ->
-                // This is the new `messageArrived`.
-                // It forwards the message to all registered listeners.
                 val msg = String(publish.payloadAsBytes)
                 listeners.forEach { it(msg) }
                 Log.d(TAG, "📩 Message arrived on ${publish.topic}: $msg")
@@ -127,11 +100,18 @@ object MqttHelper {
     }
 
     /**
-     * Publishes a message to the default command topic.
+     * Publishes a message to the default command topic with callbacks for success and error.
      */
-    fun publish(message: String, qos: Int = 1) {
+    fun publish(
+        message: String,
+        qos: Int = 1,
+        onSuccess: () -> Unit,
+        onError: (Throwable?) -> Unit
+    ) {
         if (!isConnected()) {
-            Log.e(TAG, "MQTT not connected. Cannot publish.")
+            val error = IllegalStateException("MQTT client is not connected.")
+            Log.e(TAG, "Cannot publish. ${error.message}")
+            onError(error)
             return
         }
 
@@ -143,23 +123,18 @@ object MqttHelper {
             ?.whenComplete { _, throwable ->
                 if (throwable != null) {
                     Log.e(TAG, "Publish failed to [$pub]: ${throwable.message}")
+                    onError(throwable) // Report error via callback
                 } else {
-                    // This is the equivalent of Paho's `deliveryComplete`
                     Log.d(TAG, "📤 Published to [$pub]: $message")
+                    onSuccess() // Report success via callback
                 }
             }
     }
 
-    /**
-     * Disconnects the client safely.
-     */
     fun disconnect() {
         client?.disconnect()
         Log.d(TAG, "MQTT disconnected.")
     }
 
-    /**
-     * Checks the connection state directly from the client.
-     */
     fun isConnected(): Boolean = client?.state?.isConnected == true
 }

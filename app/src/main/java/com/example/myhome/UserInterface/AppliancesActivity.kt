@@ -26,8 +26,6 @@ class AppliancesActivity : NavigationBarActivity() {
     private lateinit var searchButton: Button
     private var url = ""
     private var lanEnabled = false
-
-    // Track devices being toggled by user to prevent overwrite
     private val updatingDevices = mutableSetOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -96,8 +94,6 @@ class AppliancesActivity : NavigationBarActivity() {
     private fun setupMqtt() {
         MqttHelper.init(this)
         MqttHelper.connect(onConnected = {
-
-            //then send message
             MqttHelper.subscribe(onMessageReceived = { msg ->
                 handleMqttMessage(msg)
             })
@@ -137,6 +133,8 @@ class AppliancesActivity : NavigationBarActivity() {
 
     private fun toggleDevice(deviceId: String, newStatus: String, toggleSwitch: Switch, previousState: Boolean) {
         updatingDevices.add(deviceId)
+        toggleSwitch.isEnabled = false // Disable switch to prevent multiple clicks
+
         if (lanEnabled) {
             val hub_ip = prefs.getString("hub_ip", null)
             val hub_url = "http://$hub_ip/toggle/$deviceId"
@@ -163,7 +161,31 @@ class AppliancesActivity : NavigationBarActivity() {
                 put("id", deviceId)
                 put("status", if (newStatus == "on") 1 else 0)
             }
-            MqttHelper.publish(msg.toString())
+            MqttHelper.publish(
+                message = msg.toString(),
+                onSuccess = {
+                    // Since the callback can be on a background thread, update UI on the main thread
+                    runOnUiThread {
+                        devices.find { it.device_id == deviceId }?.status = newStatus
+                        toggleSwitch.isEnabled = true
+                        updatingDevices.remove(deviceId)
+                    }
+                },
+                onError = { error ->
+                    // Run UI updates on the main thread
+                    runOnUiThread {
+                        // Revert the switch to its previous state
+                        toggleSwitch.setOnCheckedChangeListener(null)
+                        toggleSwitch.isChecked = previousState
+                        toggleSwitch.setOnCheckedChangeListener { _, isChecked ->
+                            toggleDevice(deviceId, if (isChecked) "on" else "off", toggleSwitch, !isChecked)
+                        }
+                        toggleSwitch.isEnabled = true
+                        updatingDevices.remove(deviceId)
+                        Toast.makeText(this, "Publish Error: ${error?.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            )
         }
     }
 

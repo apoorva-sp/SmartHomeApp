@@ -128,15 +128,36 @@ class IpDiscoveryActivity : AppCompatActivity() {
         MqttHelper.connect(
             onConnected = {
                 runOnUiThread {
-                    progressBar.visibility = View.GONE
-                    resultText.text = "✅ Connected to hub via MQTT"
+                    // Update the UI to show the connection was successful and a handshake is next
+                    resultText.text = "✅ Connected to hub. Sending handshake..."
                     prefs.edit()
                         .putBoolean("LAN", false).apply()
+
                     val json = JSONObject().apply {
                         put("type", 1)
                     }
-                    MqttHelper.publish(json.toString(), qos = 1)//say hello
-                    OpenAppliancePage()
+
+                    // Call the updated publish function with callbacks for success and error
+                    MqttHelper.publish(
+                        message = json.toString(),
+                        qos = 1,
+                        onSuccess = {
+                            // Handshake was successful, now navigate to the appliance page
+                            // Ensure this navigation happens on the UI thread
+                            runOnUiThread {
+                                Log.d("IpDiscoveryActivity", "MQTT handshake successful.")
+                                OpenAppliancePage()
+                            }
+                        },
+                        onError = { error ->
+                            // The handshake failed. Inform the user and do not proceed.
+                            runOnUiThread {
+                                progressBar.visibility = View.GONE
+                                resultText.text = "❌ Connected, but handshake failed: ${error?.message}"
+                                Log.e("IpDiscoveryActivity", "MQTT handshake failed: ${error?.message}")
+                            }
+                        }
+                    )
                 }
             },
             onFailure = { error ->

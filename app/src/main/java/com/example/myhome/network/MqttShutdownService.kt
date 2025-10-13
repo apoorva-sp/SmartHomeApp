@@ -1,4 +1,4 @@
-package com.example.myhome.network // Or your preferred package
+package com.example.myhome.network
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -9,13 +9,12 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.example.myhome.R // Make sure to import your R file
+import com.example.myhome.R
 import org.json.JSONObject
 
 class MqttShutdownService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // Create a notification channel (required for Android 8+)
         val channelId = "MqttShutdownChannel"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -26,28 +25,42 @@ class MqttShutdownService : Service() {
             getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
 
-        // Create the notification for the foreground service
         val notification: Notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("MyHome")
             .setContentText("Finalizing session...")
             .setSmallIcon(R.drawable.ic_launcher_foreground) // Use your app's icon
             .build()
 
-        // Start the service in the foreground
         startForeground(1, notification)
 
-        // Perform the MQTT publish operation
+        // --- MODIFIED LOGIC ---
+
         if (MqttHelper.isConnected()) {
             val json = JSONObject().apply { put("type", 5) }
-            MqttHelper.publish(json.toString())
-            Log.d("MqttShutdownService", "Shutdown message published.")
+
+            // Use the new publish method with callbacks
+            MqttHelper.publish(
+                message = json.toString(),
+                onSuccess = {
+                    Log.d("MqttShutdownService", "✅ Shutdown message published successfully.")
+                    // Now that the task is done, disconnect and stop the service.
+                    MqttHelper.disconnect()
+                    stopSelf()
+                },
+                onError = { error ->
+                    Log.e("MqttShutdownService", "❌ Failed to publish shutdown message: ${error?.message}")
+                    // Even on error, disconnect and stop the service.
+                    MqttHelper.disconnect()
+                    stopSelf()
+                }
+            )
         } else {
-            Log.e("MqttShutdownService", "MQTT not connected, cannot publish shutdown message.")
+            Log.w("MqttShutdownService", "MQTT not connected, cannot publish. Stopping service.")
+            // If not connected, there's nothing to do, so just stop.
+            stopSelf()
         }
 
-        // Stop the service once the task is done
-        stopSelf()
-
+        // The service will continue running until stopSelf() is called inside a callback.
         return START_NOT_STICKY
     }
 

@@ -16,7 +16,8 @@ import org.json.JSONObject
 
 class MyApp : Application(), DefaultLifecycleObserver {
     private lateinit var prefs: android.content.SharedPreferences // ⭐ cache prefs
-
+    // ✅ ADD THIS FLAG
+    private var isAppInBackground = false
 
 
     override fun onCreate() {
@@ -53,6 +54,7 @@ class MyApp : Application(), DefaultLifecycleObserver {
     fun helperToStart(){
         // Always restart UDP listening
         UdpPortManager.startListening()
+        isAppInBackground = false
 
         // 🔹 Force open your chosen activity
         val isSetupDone = prefs.getBoolean("is_esp32_setup_done", false)
@@ -69,6 +71,10 @@ class MyApp : Application(), DefaultLifecycleObserver {
     }
 
     fun helperToStop(){
+        if (isAppInBackground) {
+            return // Shutdown logic has already been triggered
+        }
+        isAppInBackground = true
         val lanEnabled = prefs.getBoolean("LAN", false)
         if (lanEnabled) {
             UdpPortManager.stopListening(applicationContext)
