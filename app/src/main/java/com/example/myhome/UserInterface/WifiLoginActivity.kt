@@ -66,7 +66,7 @@ class WifiLoginActivity : AppCompatActivity() {
             val password = etPassword.text.toString().trim()
 
             if (username.isEmpty()) {
-                tvStatus.text = "Please enter username"
+                tvStatus.text = "Please enter WiFi SSID (username)"
                 return@setOnClickListener
             }
             if (password.isEmpty()) {

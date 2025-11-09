@@ -83,7 +83,9 @@ open class NavigationBarActivity : AppCompatActivity() {
                     if(lanEnabled){
                         val hub_ip = prefs.getString("hub_ip", null)
                         if (!hub_ip.isNullOrEmpty()) {
-                            hitOnApEndpoint(hub_ip) // 👈 simple one-line call
+//                            hitOnApEndpoint(hub_ip) // 👈 simple one-line call
+                            val intent = Intent(this, WifiUpdateActivity::class.java)
+                            startActivity(intent)
                         } else {
                             Toast.makeText(this, "No saved IP found.", Toast.LENGTH_SHORT).show()
                         }

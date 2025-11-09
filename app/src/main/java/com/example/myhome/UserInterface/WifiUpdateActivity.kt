@@ -13,6 +13,7 @@ import com.android.volley.toolbox.Volley
 import com.example.myhome.R
 import org.json.JSONObject
 import android.util.Log
+import com.android.volley.toolbox.StringRequest
 import com.example.myhome.utils.NavigationBarActivity
 
 class WifiUpdateActivity : NavigationBarActivity() {
@@ -44,7 +45,6 @@ class WifiUpdateActivity : NavigationBarActivity() {
     }
 
     private fun sendWifiCredentials(ssid: String, password: String) {
-        // Get hub IP from SharedPreferences
         val prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val hubIp = prefs.getString("hub_ip", null)
 
@@ -53,40 +53,37 @@ class WifiUpdateActivity : NavigationBarActivity() {
             return
         }
 
-        val url = "http://$hubIp/login"
+        val url = "http://$hubIp/updateWifiCreds"
 
-        val jsonBody = JSONObject().apply {
-            put("ssid", ssid)
-            put("password", password)
-        }
-
+        // Send as application/x-www-form-urlencoded (NOT JSON)
         val requestQueue = Volley.newRequestQueue(this)
 
-        val request = JsonObjectRequest(
-            Request.Method.POST,
-            url,
-            jsonBody,
+        val request = object : StringRequest(
+            Method.POST, url,
             { response ->
-                val code = response.optInt("code", -1)
-                val message = response.optString("message", "Unknown error")
-                if (code == 0) {
-
-                    Toast.makeText(this, "Wi-Fi updated successfully!", Toast.LENGTH_SHORT).show()
-                    Log.d(TAG, "Wi-Fi update response: $response")
-                } else {
-                    Toast.makeText(this, "Failed: $message", Toast.LENGTH_LONG).show()
-                    Log.e(TAG, "Wi-Fi update failed: $response")
-                }
+                Log.d(TAG, "Wi-Fi update response: $response")
+                Toast.makeText(this, "Wi-Fi updated successfully!", Toast.LENGTH_SHORT).show()
+                finish()
             },
             { error ->
-                Toast.makeText(this, "Error: ${error.message}", Toast.LENGTH_LONG).show()
                 Log.e(TAG, "Volley error: ${error.message}", error)
+                Toast.makeText(this, "Error: ${error.message}", Toast.LENGTH_LONG).show()
             }
-        ).apply {
+        ) {
+            override fun getParams(): MutableMap<String, String> {
+                return hashMapOf(
+                    "ssid" to ssid,
+                    "password" to password
+                )
+            }
+
+            override fun getBodyContentType(): String {
+                return "application/x-www-form-urlencoded; charset=UTF-8"
+            }
+        }.apply {
             retryPolicy = DefaultRetryPolicy(5000, 1, 1.0f)
         }
 
-        // Show feedback
         Toast.makeText(this, "Sending Wi-Fi credentials...", Toast.LENGTH_SHORT).show()
         requestQueue.add(request)
     }
